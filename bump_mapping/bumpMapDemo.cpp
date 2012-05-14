@@ -135,14 +135,14 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    }
 
 // Function to put title on the screen.
-NodePath BumpMapDemo::add_title(const string& text)
+NodePath BumpMapDemo::add_title(const string& text) const
    {
    return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(1.3,-0.95), A_right, 0.07);
    }
 
 // Note: OnscreenText is a python only function. It's capabilities are emulated here
 //       to simplify the translation to C++.
-NodePath BumpMapDemo::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale)
+NodePath BumpMapDemo::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
    {
    NodePath textNodeNp;
 
@@ -164,7 +164,7 @@ NodePath BumpMapDemo::onscreen_text(const string& text, const Colorf& fg, const 
    }
 
 // Function to put instructions on the screen.
-NodePath BumpMapDemo::add_instructions(float pos, const string& msg)
+NodePath BumpMapDemo::add_instructions(float pos, const string& msg) const
    {
    return onscreen_text(msg, Colorf(1,1,1,1), LPoint2f(-1.3, pos), A_left, 0.05);
    }

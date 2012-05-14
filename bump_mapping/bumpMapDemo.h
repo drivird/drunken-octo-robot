@@ -33,9 +33,9 @@ class BumpMapDemo
       };
 
    BumpMapDemo(); // to prevent use of the default constructor
-   NodePath add_title(const string& text);
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale);
-   NodePath add_instructions(float pos, const string& msg);
+   NodePath add_title(const string& text) const;
+   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
+   NodePath add_instructions(float pos, const string& msg) const;
    static AsyncTask::DoneStatus control_camera(GenericAsyncTask* taskPtr, void* dataPtr);
    static AsyncTask::DoneStatus step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
