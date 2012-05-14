@@ -58,10 +58,10 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    m_mouseX = 0; // Note: unused
    m_mouseY = 0; // Note: unused
    m_last = 0;
-   m_mouseBtn.resize(3);
-   m_mouseBtn[0] = false;
-   m_mouseBtn[1] = false;
-   m_mouseBtn[2] = false;
+   m_mouseBtn.resize(B_buttons);
+   m_mouseBtn[B_btn1] = false;
+   m_mouseBtn[B_btn2] = false;
+   m_mouseBtn[B_btn3] = false;
 
    // Start the camera control task:
    AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("camera-task", control_camera, this));
@@ -198,11 +198,11 @@ AsyncTask::DoneStatus BumpMapDemo::control_camera(GenericAsyncTask* taskPtr, voi
       {
       elapsed = 0;
       }
-   if(bumpMapDemoPtr->m_mouseBtn[0])
+   if(bumpMapDemoPtr->m_mouseBtn[B_btn1])
       {
       bumpMapDemoPtr->m_focus += dir * elapsed*30;
       }
-   if (bumpMapDemoPtr->m_mouseBtn[1] || bumpMapDemoPtr->m_mouseBtn[2])
+   if (bumpMapDemoPtr->m_mouseBtn[B_btn2] || bumpMapDemoPtr->m_mouseBtn[B_btn3])
       {
       bumpMapDemoPtr->m_focus -= dir * elapsed*30;
       }
@@ -233,7 +233,7 @@ void BumpMapDemo::set_mouse_btn1(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[0] = true;
+   bumpMapDemoPtr->m_mouseBtn[B_btn1] = true;
    }
 
 void BumpMapDemo::set_mouse_btn1_up(const Event* eventPtr, void* dataPtr)
@@ -246,7 +246,7 @@ void BumpMapDemo::set_mouse_btn1_up(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[0] = false;
+   bumpMapDemoPtr->m_mouseBtn[B_btn1] = false;
    }
 
 void BumpMapDemo::set_mouse_btn2(const Event* eventPtr, void* dataPtr)
@@ -259,7 +259,7 @@ void BumpMapDemo::set_mouse_btn2(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[1] = true;
+   bumpMapDemoPtr->m_mouseBtn[B_btn2] = true;
    }
 
 void BumpMapDemo::set_mouse_btn2_up(const Event* eventPtr, void* dataPtr)
@@ -272,7 +272,7 @@ void BumpMapDemo::set_mouse_btn2_up(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[1] = false;
+   bumpMapDemoPtr->m_mouseBtn[B_btn2] = false;
    }
 
 void BumpMapDemo::set_mouse_btn3(const Event* eventPtr, void* dataPtr)
@@ -285,7 +285,7 @@ void BumpMapDemo::set_mouse_btn3(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[2] = true;
+   bumpMapDemoPtr->m_mouseBtn[B_btn3] = true;
    }
 
 void BumpMapDemo::set_mouse_btn3_up(const Event* eventPtr, void* dataPtr)
@@ -298,7 +298,7 @@ void BumpMapDemo::set_mouse_btn3_up(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[2] = false;
+   bumpMapDemoPtr->m_mouseBtn[B_btn3] = false;
    }
 
 void BumpMapDemo::toggle_shader(const Event* eventPtr, void* dataPtr)

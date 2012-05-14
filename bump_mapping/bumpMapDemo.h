@@ -24,6 +24,14 @@ class BumpMapDemo
       A_right  = TextNode::A_right
       };
 
+   enum Button
+      {
+      B_btn1 = 0,
+      B_btn2,
+      B_btn3,
+      B_buttons
+      };
+
    BumpMapDemo(); // to prevent use of the default constructor
    NodePath add_title(const string& text);
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale);
