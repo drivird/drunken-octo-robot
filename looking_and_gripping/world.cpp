@@ -38,11 +38,11 @@ World::World(WindowFramework* windowFrameworkPtr)
 
    // setup key input
    m_windowFrameworkPtr->enable_keyboard();
-   m_windowFrameworkPtr->get_panda_framework()->define_key("escape", "Exit", sys_exit, NULL);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("1", "Teapot", set_teapot, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("2", "CandyCane", set_candy_cane, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("3", "Banana", set_banana, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("4", "Sword", set_sword, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("escape", "Exit"     , sys_exit      , NULL);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("1"     , "Teapot"   , set_teapot    , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("2"     , "CandyCane", set_candy_cane, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("3"     , "Banana"   , set_banana    , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("4"     , "Sword"    , set_sword     , this);
 
    // Disable mouse-based camera-control
    // Note: disable by default in C++
@@ -219,7 +219,7 @@ void World::set_teapot(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_teapot(const Event* eventPtr, void* dataPtr) parameter data cannot be NULL." << endl;
+      nout << "ERROR: void World::set_teapot(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
       return;
       }
 
@@ -232,7 +232,7 @@ void World::set_candy_cane(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_candy_cane(const Event* eventPtr, void* dataPtr) parameter data cannot be NULL." << endl;
+      nout << "ERROR: void World::set_candy_cane(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
       return;
       }
 
@@ -245,7 +245,7 @@ void World::set_banana(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_banana(const Event* eventPtr, void* dataPtr) parameter data cannot be NULL." << endl;
+      nout << "ERROR: void World::set_banana(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
       return;
       }
 
@@ -258,7 +258,7 @@ void World::set_sword(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_sword(const Event* eventPtr, void* dataPtr) parameter data cannot be NULL." << endl;
+      nout << "ERROR: void World::set_sword(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
       return;
       }
 
@@ -316,7 +316,7 @@ void World::setup_lights()
    ambientLightPtr->set_color(Colorf(.4,.4,.35,1));
    directionalLightPtr->set_direction(LVector3f(0,8,-2.5));
    directionalLightPtr->set_color(Colorf(0.9,0.8,0.9,1));
-   NodePath renderNP = m_windowFrameworkPtr->get_render();
-   renderNP.set_light(renderNP.attach_new_node(directionalLightPtr));
-   renderNP.set_light(renderNP.attach_new_node(ambientLightPtr));
+   NodePath renderNp = m_windowFrameworkPtr->get_render();
+   renderNp.set_light(renderNp.attach_new_node(directionalLightPtr));
+   renderNp.set_light(renderNp.attach_new_node(ambientLightPtr));
    }
