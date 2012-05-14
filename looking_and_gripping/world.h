@@ -48,8 +48,8 @@ class World
       };
 
    World(); // to prevent use of default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale);
-   NodePath gen_label_text(const string& text, int i);
+   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
+   NodePath gen_label_text(const string& text, int i) const;
    void set_object(int i);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    static void set_teapot(const Event* eventPtr, void* dataPtr);
@@ -58,7 +58,7 @@ class World
    static void set_sword(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
    static float restrain(float i, float mn = -1, float mx = 1);
-   void setup_lights();
+   void setup_lights() const;
 
    PT(WindowFramework) m_windowFrameworkPtr;
    AnimControlCollection m_animControlCollection;

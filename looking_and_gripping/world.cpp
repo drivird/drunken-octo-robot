@@ -163,7 +163,7 @@ World::World(WindowFramework* windowFrameworkPtr)
 
 // Note: OnscreenText is a python only function. It's capabilities are emulated here
 //       to simplify the translation to C++.
-NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale)
+NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
    {
    NodePath textNodeNp;
 
@@ -186,7 +186,7 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
 
 // Function used to reduce the amount to code needed to create the
 // on screen instructions
-NodePath World::gen_label_text(const string& text, int i)
+NodePath World::gen_label_text(const string& text, int i) const
    {
    return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(-1.3, 0.95-0.06*i), A_left, 0.05);
    }
@@ -303,7 +303,7 @@ float World::restrain(float i, float mn /*= -1*/, float mx /*= 1*/)
    }
 
 //Sets up some default lighting
-void World::setup_lights()
+void World::setup_lights() const
    {
    PT(AmbientLight) ambientLightPtr = new AmbientLight("ambientLight");
    PT(DirectionalLight) directionalLightPtr = new DirectionalLight("directionalLight");
