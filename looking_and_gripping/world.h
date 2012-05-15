@@ -47,18 +47,19 @@ class World
       ModelData(const string& filename, const LVecBase3f& pos, const LVecBase3f& hpr, float scale);
       };
 
-   World(); // to prevent use of default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
+   static float restrain(float i, float mn = -1, float mx = 1);
    NodePath gen_label_text(const string& text, int i) const;
    void set_object(int i);
+   static AsyncTask::DoneStatus turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
+   void setup_lights() const;
+
+   World(); // to prevent use of default constructor
+   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    static void set_teapot(const Event* eventPtr, void* dataPtr);
    static void set_candy_cane(const Event* eventPtr, void* dataPtr);
    static void set_banana(const Event* eventPtr, void* dataPtr);
    static void set_sword(const Event* eventPtr, void* dataPtr);
-   static AsyncTask::DoneStatus turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
-   static float restrain(float i, float mn = -1, float mx = 1);
-   void setup_lights() const;
 
    PT(WindowFramework) m_windowFrameworkPtr;
    AnimControlCollection m_animControlCollection;

@@ -18,6 +18,19 @@
 #include "ambientLight.h"
 #include "directionalLight.h"
 
+// A simple function to make sure a value is in a given range, -1 to 1 by default
+float World::restrain(float i, float mn /*= -1*/, float mx /*= 1*/)
+   {
+   return min(max(i, mn), mx);
+   }
+
+// Function used to reduce the amount to code needed to create the
+// on screen instructions
+NodePath World::gen_label_text(const string& text, int i) const
+   {
+   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(-1.3, 0.95-0.06*i), A_left, 0.05);
+   }
+
 World::World(WindowFramework* windowFrameworkPtr)
    : m_windowFrameworkPtr(windowFrameworkPtr)
    {
@@ -161,6 +174,73 @@ World::World(WindowFramework* windowFrameworkPtr)
    setup_lights();
    }
 
+// This is what we use to change which object it being held. It just hides all of
+// the objects and then unhides the one that was selected
+void World::set_object(int i)
+   {
+   // preconditions
+   if(i < 0 || (unsigned int)i >= m_modelsNp.size())
+      {
+      nout << "ERROR: void World::set_object(int i) parameter i is out of range (i=" << i << ")" << endl;
+      return;
+      }
+
+   for(vector<NodePath>::iterator np = m_modelsNp.begin(); np < m_modelsNp.end(); ++np)
+      {
+      np->hide();
+      }
+   m_modelsNp[i].show();
+   }
+
+// This task gets the position of mouse each frame, and rotates the neck based
+// on it.
+AsyncTask::DoneStatus World::turn_head(GenericAsyncTask* taskPtr, void* dataPtr)
+   {
+   // preconditions
+   if(dataPtr == NULL)
+      {
+      nout << "ERROR: static AsyncTask::DoneStatus World::turnHead(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      return AsyncTask::DS_done;
+      }
+
+   World* worldPtr = static_cast<World*>(dataPtr);
+   // Check to make sure the mouse is readable
+   PT(MouseWatcher) mouseWatcherPtr = DCAST(MouseWatcher, worldPtr->m_windowFrameworkPtr->get_mouse().node());
+   if(mouseWatcherPtr->has_mouse())
+      {
+      // get the mouse position as a Vec2. The values for each axis are from -1 to
+      // 1. The top-left is (-1,-1), the bottom right is (1,1)
+      const LPoint2f& mpos = mouseWatcherPtr->get_mouse();
+      // Here we multiply the values to get the amount of degrees to turn
+      // Restrain is used to make sure the values returned by getMouse are in the
+      // valid range. If this particular model were to turn more than this,
+      // significant tearing would be visible
+      worldPtr->m_eveNeckNp.set_p(restrain(mpos.get_x()) * 50);
+      worldPtr->m_eveNeckNp.set_h(restrain(mpos.get_y()) * 20);
+      }
+   // Task continues infinitely
+   return AsyncTask::DS_cont;
+   }
+
+//Sets up some default lighting
+void World::setup_lights() const
+   {
+   PT(AmbientLight) ambientLightPtr = new AmbientLight("ambientLight");
+   PT(DirectionalLight) directionalLightPtr = new DirectionalLight("directionalLight");
+   if(ambientLightPtr == NULL || directionalLightPtr == NULL)
+      {
+      nout << "ERROR: out of memory." << endl;
+      return;
+      }
+
+   ambientLightPtr->set_color(Colorf(.4,.4,.35,1));
+   directionalLightPtr->set_direction(LVector3f(0,8,-2.5));
+   directionalLightPtr->set_color(Colorf(0.9,0.8,0.9,1));
+   NodePath renderNp = m_windowFrameworkPtr->get_render();
+   renderNp.set_light(renderNp.attach_new_node(directionalLightPtr));
+   renderNp.set_light(renderNp.attach_new_node(ambientLightPtr));
+   }
+
 // Note: OnscreenText is a python only function. It's capabilities are emulated here
 //       to simplify the translation to C++.
 NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
@@ -182,31 +262,6 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
       }
 
    return textNodeNp;
-   }
-
-// Function used to reduce the amount to code needed to create the
-// on screen instructions
-NodePath World::gen_label_text(const string& text, int i) const
-   {
-   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(-1.3, 0.95-0.06*i), A_left, 0.05);
-   }
-
-// This is what we use to change which object it being held. It just hides all of
-// the objects and then unhides the one that was selected
-void World::set_object(int i)
-   {
-   // preconditions
-   if(i < 0 || (unsigned int)i >= m_modelsNp.size())
-      {
-      nout << "ERROR: void World::set_object(int i) parameter i is out of range (i=" << i << ")" << endl;
-      return;
-      }
-
-   for(vector<NodePath>::iterator np = m_modelsNp.begin(); np < m_modelsNp.end(); ++np)
-      {
-      np->hide();
-      }
-   m_modelsNp[i].show();
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)
@@ -264,59 +319,4 @@ void World::set_sword(const Event* eventPtr, void* dataPtr)
 
    World* worldPtr = static_cast<World*>(dataPtr);
    worldPtr->set_object(M_sword);
-   }
-
-// This task gets the position of mouse each frame, and rotates the neck based
-// on it.
-AsyncTask::DoneStatus World::turn_head(GenericAsyncTask* taskPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: static AsyncTask::DoneStatus World::turnHead(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return AsyncTask::DS_done;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   // Check to make sure the mouse is readable
-   PT(MouseWatcher) mouseWatcherPtr = DCAST(MouseWatcher, worldPtr->m_windowFrameworkPtr->get_mouse().node());
-   if(mouseWatcherPtr->has_mouse())
-      {
-      // get the mouse position as a Vec2. The values for each axis are from -1 to
-      // 1. The top-left is (-1,-1), the bottom right is (1,1)
-      const LPoint2f& mpos = mouseWatcherPtr->get_mouse();
-      // Here we multiply the values to get the amount of degrees to turn
-      // Restrain is used to make sure the values returned by getMouse are in the
-      // valid range. If this particular model were to turn more than this,
-      // significant tearing would be visible
-      worldPtr->m_eveNeckNp.set_p(restrain(mpos.get_x()) * 50);
-      worldPtr->m_eveNeckNp.set_h(restrain(mpos.get_y()) * 20);
-      }
-   // Task continues infinitely
-   return AsyncTask::DS_cont;
-   }
-
-// A simple function to make sure a value is in a given range, -1 to 1 by default
-float World::restrain(float i, float mn /*= -1*/, float mx /*= 1*/)
-   {
-   return min(max(i, mn), mx);
-   }
-
-//Sets up some default lighting
-void World::setup_lights() const
-   {
-   PT(AmbientLight) ambientLightPtr = new AmbientLight("ambientLight");
-   PT(DirectionalLight) directionalLightPtr = new DirectionalLight("directionalLight");
-   if(ambientLightPtr == NULL || directionalLightPtr == NULL)
-      {
-      nout << "ERROR: out of memory." << endl;
-      return;
-      }
-
-   ambientLightPtr->set_color(Colorf(.4,.4,.35,1));
-   directionalLightPtr->set_direction(LVector3f(0,8,-2.5));
-   directionalLightPtr->set_color(Colorf(0.9,0.8,0.9,1));
-   NodePath renderNp = m_windowFrameworkPtr->get_render();
-   renderNp.set_light(renderNp.attach_new_node(directionalLightPtr));
-   renderNp.set_light(renderNp.attach_new_node(ambientLightPtr));
    }
