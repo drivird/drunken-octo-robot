@@ -12,6 +12,18 @@
 #include "ambientLight.h"
 #include "cIntervalManager.h"
 
+// Function to put title on the screen.
+NodePath BumpMapDemo::add_title(const string& text) const
+   {
+   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(1.3,-0.95), A_right, 0.07);
+   }
+
+// Function to put instructions on the screen.
+NodePath BumpMapDemo::add_instructions(float pos, const string& msg) const
+   {
+   return onscreen_text(msg, Colorf(1,1,1,1), LPoint2f(-1.3, pos), A_left, 0.05);
+   }
+
 BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    : m_windowFrameworkPtr(windowFrameworkPtr)
    {
@@ -66,18 +78,18 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    // Start the camera control task:
    AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("camera-task", control_camera, this));
    m_windowFrameworkPtr->enable_keyboard();
-   m_windowFrameworkPtr->get_panda_framework()->define_key("escape"     , "sysExit"       , sys_exit         , NULL);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1"     , "setMouseBtn1"  , set_mouse_btn1   , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1-up"  , "setMouseBtn1Up", set_mouse_btn1_up, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2"     , "setMouseBtn2"  , set_mouse_btn2   , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2-up"  , "setMouseBtn2Up", set_mouse_btn2_up, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3"     , "setMouseBtn3"  , set_mouse_btn3   , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3-up"  , "setMouseBtn3Up", set_mouse_btn3_up, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("enter"      , "toggleShader"  , toggle_shader    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("j"          , "rotateLight"   , rotate_light     , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("k"          , "rotateLightInv", rotate_light_inv , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left" , "rotateCam"     , rotate_cam       , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right", "rotateCamInv"  , rotate_cam_inv   , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("escape"     , "sysExit"            , sys_exit             , NULL);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1"     , "setMouseBtn1"       , set_mouse_btn1       , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1-up"  , "setMouseBtn1Up"     , set_mouse_btn1_up    , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2"     , "setMouseBtn2"       , set_mouse_btn2       , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2-up"  , "setMouseBtn2Up"     , set_mouse_btn2_up    , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3"     , "setMouseBtn3"       , set_mouse_btn3       , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3-up"  , "setMouseBtn3Up"     , set_mouse_btn3_up    , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("enter"      , "toggleShader"       , call_toggle_shader   , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("j"          , "rotateLightNegative", rotate_light_negative, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("k"          , "rotateLightPositive", rotate_light_positive, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left" , "rotateCamNegative"  , rotate_cam_negative  , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right", "rotateCamPositive"  , rotate_cam_positive  , this);
 
    // Add a light to the scene.
    m_lightPivotNp = m_windowFrameworkPtr->get_render().attach_new_node("lightpivot");
@@ -134,39 +146,36 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    m_shaderEnable = true;
    }
 
-// Function to put title on the screen.
-NodePath BumpMapDemo::add_title(const string& text) const
+void BumpMapDemo::set_mouse_btn(int btn, bool value)
    {
-   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(1.3,-0.95), A_right, 0.07);
+   m_mouseBtn[btn] = value;
    }
 
-// Note: OnscreenText is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath BumpMapDemo::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
+void BumpMapDemo::rotate_light(Offset offset)
    {
-   NodePath textNodeNp;
+   m_lightPivotNp.set_h(m_lightPivotNp.get_h() + offset*20);
+   }
 
-   if(m_windowFrameworkPtr != NULL)
+void BumpMapDemo::rotate_cam(Offset offset)
+   {
+   m_heading -= offset*10;
+   }
+
+void BumpMapDemo::toggle_shader()
+   {
+   m_inst5Np.remove_node();
+   if(m_shaderEnable)
       {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
+      m_inst5Np = add_instructions(0.75, "Enter: Turn bump maps On");
+      m_shaderEnable = false;
+      m_roomNp.set_shader_off();
       }
-
-   return textNodeNp;
-   }
-
-// Function to put instructions on the screen.
-NodePath BumpMapDemo::add_instructions(float pos, const string& msg) const
-   {
-   return onscreen_text(msg, Colorf(1,1,1,1), LPoint2f(-1.3, pos), A_left, 0.05);
+   else
+      {
+      m_inst5Np = add_instructions(0.75, "Enter: Turn bump maps Off");
+      m_shaderEnable = true;
+      m_roomNp.set_shader_auto();
+      }
    }
 
 AsyncTask::DoneStatus BumpMapDemo::control_camera(GenericAsyncTask* taskPtr, void* dataPtr)
@@ -218,6 +227,29 @@ AsyncTask::DoneStatus BumpMapDemo::control_camera(GenericAsyncTask* taskPtr, voi
    return AsyncTask::DS_cont;
    }
 
+// Note: OnscreenText is a python only function. It's capabilities are emulated here
+//       to simplify the translation to C++.
+NodePath BumpMapDemo::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
+   {
+   NodePath textNodeNp;
+
+   if(m_windowFrameworkPtr != NULL)
+      {
+      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
+      if(textNodePtr != NULL)
+         {
+         textNodePtr->set_text(text);
+         textNodePtr->set_text_color(fg);
+         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
+         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
+         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
+         textNodeNp.set_scale(scale);
+         }
+      }
+
+   return textNodeNp;
+   }
+
 void BumpMapDemo::sys_exit(const Event* eventPtr, void* dataPtr)
    {
    exit(0);
@@ -233,7 +265,7 @@ void BumpMapDemo::set_mouse_btn1(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[B_btn1] = true;
+   bumpMapDemoPtr->set_mouse_btn(B_btn1, true);
    }
 
 void BumpMapDemo::set_mouse_btn1_up(const Event* eventPtr, void* dataPtr)
@@ -246,7 +278,7 @@ void BumpMapDemo::set_mouse_btn1_up(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[B_btn1] = false;
+   bumpMapDemoPtr->set_mouse_btn(B_btn1, false);
    }
 
 void BumpMapDemo::set_mouse_btn2(const Event* eventPtr, void* dataPtr)
@@ -259,7 +291,7 @@ void BumpMapDemo::set_mouse_btn2(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[B_btn2] = true;
+   bumpMapDemoPtr->set_mouse_btn(B_btn2, true);
    }
 
 void BumpMapDemo::set_mouse_btn2_up(const Event* eventPtr, void* dataPtr)
@@ -272,7 +304,7 @@ void BumpMapDemo::set_mouse_btn2_up(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[B_btn2] = false;
+   bumpMapDemoPtr->set_mouse_btn(B_btn2, false);
    }
 
 void BumpMapDemo::set_mouse_btn3(const Event* eventPtr, void* dataPtr)
@@ -285,7 +317,7 @@ void BumpMapDemo::set_mouse_btn3(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[B_btn3] = true;
+   bumpMapDemoPtr->set_mouse_btn(B_btn3, true);
    }
 
 void BumpMapDemo::set_mouse_btn3_up(const Event* eventPtr, void* dataPtr)
@@ -298,10 +330,10 @@ void BumpMapDemo::set_mouse_btn3_up(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_mouseBtn[B_btn3] = false;
+   bumpMapDemoPtr->set_mouse_btn(B_btn3, false);
    }
 
-void BumpMapDemo::toggle_shader(const Event* eventPtr, void* dataPtr)
+void BumpMapDemo::call_toggle_shader(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -311,35 +343,10 @@ void BumpMapDemo::toggle_shader(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_inst5Np.remove_node();
-   if(bumpMapDemoPtr->m_shaderEnable)
-      {
-      bumpMapDemoPtr->m_inst5Np = bumpMapDemoPtr->add_instructions(0.75, "Enter: Turn bump maps On");
-      bumpMapDemoPtr->m_shaderEnable = false;
-      bumpMapDemoPtr->m_roomNp.set_shader_off();
-      }
-   else
-      {
-      bumpMapDemoPtr->m_inst5Np = bumpMapDemoPtr->add_instructions(0.75, "Enter: Turn bump maps Off");
-      bumpMapDemoPtr->m_shaderEnable = true;
-      bumpMapDemoPtr->m_roomNp.set_shader_auto();
-      }
+   bumpMapDemoPtr->toggle_shader();
    }
 
-void BumpMapDemo::rotate_light(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void BumpMapDemo::rotate_light(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_lightPivotNp.set_h(bumpMapDemoPtr->m_lightPivotNp.get_h()-20);
-   }
-
-void BumpMapDemo::rotate_light_inv(const Event* eventPtr, void* dataPtr)
+void BumpMapDemo::rotate_light_positive(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -349,10 +356,23 @@ void BumpMapDemo::rotate_light_inv(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_lightPivotNp.set_h(bumpMapDemoPtr->m_lightPivotNp.get_h()+20);
+   bumpMapDemoPtr->rotate_light(O_positive);
    }
 
-void BumpMapDemo::rotate_cam(const Event* eventPtr, void* dataPtr)
+void BumpMapDemo::rotate_light_negative(const Event* eventPtr, void* dataPtr)
+   {
+   // preconditions
+   if(dataPtr == NULL)
+      {
+      nout << "ERROR: void BumpMapDemo::rotate_light(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      return;
+      }
+
+   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
+   bumpMapDemoPtr->rotate_light(O_negative);
+   }
+
+void BumpMapDemo::rotate_cam_negative(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -362,10 +382,10 @@ void BumpMapDemo::rotate_cam(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_heading += 10;
+   bumpMapDemoPtr->rotate_cam(O_negative);
    }
 
-void BumpMapDemo::rotate_cam_inv(const Event* eventPtr, void* dataPtr)
+void BumpMapDemo::rotate_cam_positive(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -375,7 +395,7 @@ void BumpMapDemo::rotate_cam_inv(const Event* eventPtr, void* dataPtr)
       }
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->m_heading -= 10;
+   bumpMapDemoPtr->rotate_cam(O_positive);
    }
 
 AsyncTask::DoneStatus BumpMapDemo::step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr)
