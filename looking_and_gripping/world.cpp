@@ -64,19 +64,29 @@ World::World(WindowFramework* windowFrameworkPtr)
    m_windowFrameworkPtr->get_camera_group().set_pos(0,-15, 2);
 
    // Load our animated character
-   m_eveNp = m_windowFrameworkPtr->load_model(m_windowFrameworkPtr->get_panda_framework()->get_models(), "../models/eve");
+   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
+   m_eveNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/eve");
 
    // Load the character's walk animation
    // Note: File eve_walk.egg is broken!
    //       The name of the animation is case sensitive and at line 13 of file
    //       eve_walk.egg you should read `Eve' instead of `eve'. You need to
    //       correct this in order to bind the animation automatically using
-   //       auto_bind() or WindowFramework::loop_animations().
+   //       auto_bind() or WindowFramework::loop_animations(). Or you can pass
+   //       PartGroup::HMF_ok_wrong_root_name as a third parameter.
    m_windowFrameworkPtr->load_model(m_eveNp, "../models/eve_walk");
-   auto_bind(m_eveNp.node(), m_animControlCollection);
+   auto_bind(m_eveNp.node(), m_animControlCollection, PartGroup::HMF_ok_wrong_root_name);
+   if(m_animControlCollection.get_num_anims() == 1)
+      {
+      PT(AnimControl) animControlPtr = m_animControlCollection.get_anim(0);
+      m_animControlCollection.store_anim(animControlPtr, "walk");
+      m_animControlCollection.unbind_anim(m_animControlCollection.get_anim_name(0));
+      }
+
 
    // Put it in the scene
-   m_eveNp.reparent_to(m_windowFrameworkPtr->get_render());
+   NodePath renderNp = m_windowFrameworkPtr->get_render();
+   m_eveNp.reparent_to(renderNp);
 
    // Now we use control_joint to get a NodePath that's in control of her neck
    // This must be done before any animations are played
@@ -112,10 +122,14 @@ World::World(WindowFramework* windowFrameworkPtr)
    // Note: the AnimControl's name is the one from the <Bundle> tag in the egg file,
    //       in this case `Eve'.
    m_animControlCollection.get_anim(0)->set_play_rate(2);
-   m_animControlCollection.loop("Eve", true);
+   m_animControlCollection.loop("walk", true);
 
    // Now we add a task that will take care of turning the head
-   AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("turnHead", World::turn_head, this));
+   PT(GenericAsyncTask) turnHeadTask = new GenericAsyncTask("turnHead", call_turn_head, this);
+   if(turnHeadTask != NULL)
+      {
+      AsyncTaskManager::get_global_ptr()->add(turnHeadTask);
+      }
 
    // Now we will expose the joint the hand joint. ExposeJoint allows us to
    // get the position of a joint while it is animating. This is different than
@@ -154,7 +168,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    for(vector<ModelData>::iterator i = positions.begin(); i < positions.end(); ++i)
       {
       // Load the model
-      NodePath np = m_windowFrameworkPtr->load_model(m_windowFrameworkPtr->get_panda_framework()->get_models(), i->m_filename);
+      NodePath np = m_windowFrameworkPtr->load_model(modelsNp, i->m_filename);
       // Position it
       np.set_pos(i->m_pos);
       // Rotate it
@@ -194,18 +208,10 @@ void World::set_object(int i)
 
 // This task gets the position of mouse each frame, and rotates the neck based
 // on it.
-AsyncTask::DoneStatus World::turn_head(GenericAsyncTask* taskPtr, void* dataPtr)
+void World::turn_head()
    {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: static AsyncTask::DoneStatus World::turnHead(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return AsyncTask::DS_done;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
    // Check to make sure the mouse is readable
-   PT(MouseWatcher) mouseWatcherPtr = DCAST(MouseWatcher, worldPtr->m_windowFrameworkPtr->get_mouse().node());
+   PT(MouseWatcher) mouseWatcherPtr = DCAST(MouseWatcher, m_windowFrameworkPtr->get_mouse().node());
    if(mouseWatcherPtr->has_mouse())
       {
       // get the mouse position as a Vec2. The values for each axis are from -1 to
@@ -215,11 +221,9 @@ AsyncTask::DoneStatus World::turn_head(GenericAsyncTask* taskPtr, void* dataPtr)
       // Restrain is used to make sure the values returned by getMouse are in the
       // valid range. If this particular model were to turn more than this,
       // significant tearing would be visible
-      worldPtr->m_eveNeckNp.set_p(restrain(mpos.get_x()) * 50);
-      worldPtr->m_eveNeckNp.set_h(restrain(mpos.get_y()) * 20);
+      m_eveNeckNp.set_p(restrain(mpos.get_x()) * 50);
+      m_eveNeckNp.set_h(restrain(mpos.get_y()) * 20);
       }
-   // Task continues infinitely
-   return AsyncTask::DS_cont;
    }
 
 //Sets up some default lighting
@@ -319,4 +323,20 @@ void World::set_sword(const Event* eventPtr, void* dataPtr)
 
    World* worldPtr = static_cast<World*>(dataPtr);
    worldPtr->set_object(M_sword);
+   }
+
+AsyncTask::DoneStatus World::call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr)
+   {
+   // preconditions
+   if(dataPtr == NULL)
+      {
+      nout << "ERROR: static AsyncTask::DoneStatus World::turnHead(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      return AsyncTask::DS_done;
+      }
+
+   World* worldPtr = static_cast<World*>(dataPtr);
+   worldPtr->turn_head();
+
+   // Task continues infinitely
+   return AsyncTask::DS_cont;
    }

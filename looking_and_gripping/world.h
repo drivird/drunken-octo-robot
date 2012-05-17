@@ -50,7 +50,7 @@ class World
    static float restrain(float i, float mn = -1, float mx = 1);
    NodePath gen_label_text(const string& text, int i) const;
    void set_object(int i);
-   static AsyncTask::DoneStatus turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
+   void turn_head();
    void setup_lights() const;
 
    World(); // to prevent use of default constructor
@@ -60,6 +60,7 @@ class World
    static void set_candy_cane(const Event* eventPtr, void* dataPtr);
    static void set_banana(const Event* eventPtr, void* dataPtr);
    static void set_sword(const Event* eventPtr, void* dataPtr);
+   static AsyncTask::DoneStatus call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
    AnimControlCollection m_animControlCollection;

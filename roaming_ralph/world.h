@@ -8,7 +8,6 @@
 #ifndef WORLD_H_
 #define WORLD_H_
 
-#include "pandaFramework.h"
 #include "collisionTraverser.h"
 #include "collisionRay.h"
 #include "collisionHandlerQueue.h"
@@ -30,7 +29,7 @@ class World
    NodePath add_title(const string& text) const;
    NodePath add_instructions(float pos, const string& msg) const;
    void set_key(const string& key, bool value);
-   AsyncTask::DoneStatus move(GenericAsyncTask* taskPtr);
+   void move();
 
    World(); // to prevent use of the default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
@@ -46,7 +45,7 @@ class World
    static void unset_key_forward(const Event* eventPtr, void* dataPtr);
    static void unset_key_cam_left(const Event* eventPtr, void* dataPtr);
    static void unset_key_cam_right(const Event* eventPtr, void* dataPtr);
-   static AsyncTask::DoneStatus move_task(GenericAsyncTask* taskPtr, void* dataPtr);
+   static AsyncTask::DoneStatus call_move(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
    map<string, bool> m_keyMap;
@@ -63,6 +62,10 @@ class World
    bool m_isMoving;
    AnimControlCollection m_animControlCollection;
    CollisionTraverser m_collisionTraverser;
+   PT(CollisionRay) m_ralphGroundRayPtr;
+   PT(CollisionRay) m_camGroundRayPtr;
+   PT(CollisionNode) m_ralphGroundColPtr;
+   PT(CollisionNode) m_camGroundColPtr;
    PT(CollisionHandlerQueue) m_ralphGroundHandlerPtr;
    PT(CollisionHandlerQueue) m_camGroundHandlerPtr;
    };

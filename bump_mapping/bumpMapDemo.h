@@ -44,7 +44,7 @@ class BumpMapDemo
    void rotate_light(Offset offset);
    void rotate_cam(Offset offset);
    void toggle_shader();
-   static AsyncTask::DoneStatus control_camera(GenericAsyncTask* taskPtr, void* dataPtr);
+   void control_camera(GenericAsyncTask* taskPtr);
 
    BumpMapDemo(); // to prevent use of the default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
@@ -60,6 +60,7 @@ class BumpMapDemo
    static void rotate_light_negative(const Event* eventPtr, void* dataPtr);
    static void rotate_cam_negative(const Event* eventPtr, void* dataPtr);
    static void rotate_cam_positive(const Event* eventPtr, void* dataPtr);
+   static AsyncTask::DoneStatus call_control_camera(GenericAsyncTask* taskPtr, void* dataPtr);
    static AsyncTask::DoneStatus step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;

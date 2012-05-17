@@ -5,12 +5,13 @@
  *      Author: dri
  */
 
-#include "world.h"
-#include "auto_bind.h"
+
+#include "pandaFramework.h"
 #include "ambientLight.h"
 #include "directionalLight.h"
 #include "partBundleNode.h"
 #include "animBundleNode.h"
+#include "world.h"
 
 const float SPEED = 0.5; // Note: unused
 
@@ -65,14 +66,15 @@ World::World(WindowFramework* windowFrameworkPtr)
    // It also keeps the original mesh, so there are now two copies ---
    // one optimized for rendering, one for collisions.
 
-   m_environNp = m_windowFrameworkPtr->load_model(m_windowFrameworkPtr->get_panda_framework()->get_models(), "../models/world");
+   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
+   m_environNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/world");
    NodePath renderNp = m_windowFrameworkPtr->get_render();
    m_environNp.reparent_to(renderNp);
    m_environNp.set_pos(0,0,0);
 
    // Create the main character, Ralph
    LPoint3f ralphStartPos = m_environNp.find("**/start_point").get_pos();
-   m_ralphNp = m_windowFrameworkPtr->load_model(m_windowFrameworkPtr->get_panda_framework()->get_models(), "../models/ralph");
+   m_ralphNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/ralph");
    add_anim("run", "../models/ralph-run");
    add_anim("walk", "../models/ralph-walk");
    m_ralphNp.reparent_to(renderNp);
@@ -99,7 +101,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    m_windowFrameworkPtr->get_panda_framework()->define_key("a-up"          , "cam-leftUp" , unset_key_cam_left , this);
    m_windowFrameworkPtr->get_panda_framework()->define_key("s-up"          , "cam-rightUp", unset_key_cam_right, this);
 
-   PT(GenericAsyncTask) taskPtr = new GenericAsyncTask("moveTask", move_task, this);
+   PT(GenericAsyncTask) taskPtr = new GenericAsyncTask("moveTask", call_move, this);
    if(taskPtr != NULL)
       {
       AsyncTaskManager::get_global_ptr()->add(taskPtr);
@@ -122,18 +124,18 @@ World::World(WindowFramework* windowFrameworkPtr)
    // else, we rule that the move is illegal.
 
    NodePath ralphGroundColNp;
-   PT(CollisionRay) ralphGroundRayPtr = new CollisionRay();
-   if(ralphGroundRayPtr != NULL)
+   m_ralphGroundRayPtr = new CollisionRay();
+   if(m_ralphGroundRayPtr != NULL)
       {
-      ralphGroundRayPtr->set_origin(0, 0, 1000);
-      ralphGroundRayPtr->set_direction(0, 0, -1);
-      PT(CollisionNode) ralphGroundColPtr = new CollisionNode("ralphRay");
-      if(ralphGroundColPtr != NULL)
+      m_ralphGroundRayPtr->set_origin(0, 0, 1000);
+      m_ralphGroundRayPtr->set_direction(0, 0, -1);
+      m_ralphGroundColPtr = new CollisionNode("ralphRay");
+      if(m_ralphGroundColPtr != NULL)
          {
-         ralphGroundColPtr->add_solid(ralphGroundRayPtr);
-         ralphGroundColPtr->set_from_collide_mask(BitMask32::bit(0));
-         ralphGroundColPtr->set_into_collide_mask(BitMask32::all_off());
-         ralphGroundColNp = m_ralphNp.attach_new_node(ralphGroundColPtr);
+         m_ralphGroundColPtr->add_solid(m_ralphGroundRayPtr);
+         m_ralphGroundColPtr->set_from_collide_mask(BitMask32::bit(0));
+         m_ralphGroundColPtr->set_into_collide_mask(BitMask32::all_off());
+         ralphGroundColNp = m_ralphNp.attach_new_node(m_ralphGroundColPtr);
          m_ralphGroundHandlerPtr = new CollisionHandlerQueue();
          if(m_ralphGroundHandlerPtr != NULL)
             {
@@ -143,18 +145,18 @@ World::World(WindowFramework* windowFrameworkPtr)
       }
 
    NodePath camGroundColNp;
-   PT(CollisionRay) camGroundRayPtr = new CollisionRay();
-   if(camGroundRayPtr != NULL)
+   m_camGroundRayPtr = new CollisionRay();
+   if(m_camGroundRayPtr != NULL)
       {
-      camGroundRayPtr->set_origin(0, 0, 1000);
-      camGroundRayPtr->set_direction(0, 0, -1);
-      PT(CollisionNode) camGroundColPtr = new CollisionNode("camRay");
-      if(camGroundColPtr != NULL)
+      m_camGroundRayPtr->set_origin(0, 0, 1000);
+      m_camGroundRayPtr->set_direction(0, 0, -1);
+      m_camGroundColPtr = new CollisionNode("camRay");
+      if(m_camGroundColPtr != NULL)
          {
-         camGroundColPtr->add_solid(camGroundRayPtr);
-         camGroundColPtr->set_from_collide_mask(BitMask32::bit(0));
-         camGroundColPtr->set_into_collide_mask(BitMask32::all_off());
-         camGroundColNp = cameraNp.attach_new_node(camGroundColPtr);
+         m_camGroundColPtr->add_solid(m_camGroundRayPtr);
+         m_camGroundColPtr->set_from_collide_mask(BitMask32::bit(0));
+         m_camGroundColPtr->set_into_collide_mask(BitMask32::all_off());
+         camGroundColNp = cameraNp.attach_new_node(m_camGroundColPtr);
          m_camGroundHandlerPtr = new CollisionHandlerQueue();
          if(m_camGroundHandlerPtr != NULL)
             {
@@ -196,7 +198,7 @@ void World::set_key(const string& key, bool value)
 
 // Accepts arrow keys to move either the player or the menu cursor,
 // Also deals with grid checking and collision detection
-AsyncTask::DoneStatus World::move(GenericAsyncTask* taskPtr)
+void World::move()
    {
    // If the camera-left key is pressed, move camera left.
    // If the camera-right key is pressed, move camera right.
@@ -205,11 +207,11 @@ AsyncTask::DoneStatus World::move(GenericAsyncTask* taskPtr)
    cameraNp.look_at(m_ralphNp);
    if(m_keyMap["cam-left"] != false)
       {
-      cameraNp.set_x(cameraNp, -20 * taskPtr->get_dt());
+      cameraNp.set_x(cameraNp, -20 * ClockObject::get_global_clock()->get_dt());
       }
    if(m_keyMap["cam-right"] != false)
       {
-      cameraNp.set_x(cameraNp, +20 * taskPtr->get_dt());
+      cameraNp.set_x(cameraNp, +20 * ClockObject::get_global_clock()->get_dt());
       }
 
    // save ralph's initial position so that we can restore it,
@@ -221,15 +223,15 @@ AsyncTask::DoneStatus World::move(GenericAsyncTask* taskPtr)
 
    if(m_keyMap["left"])
       {
-      m_ralphNp.set_h(m_ralphNp.get_h() + 300 * taskPtr->get_dt());
+      m_ralphNp.set_h(m_ralphNp.get_h() + 300 * ClockObject::get_global_clock()->get_dt());
       }
    if(m_keyMap["right"])
       {
-      m_ralphNp.set_h(m_ralphNp.get_h() - 300 * taskPtr->get_dt());
+      m_ralphNp.set_h(m_ralphNp.get_h() - 300 * ClockObject::get_global_clock()->get_dt());
       }
    if(m_keyMap["forward"])
       {
-      m_ralphNp.set_y(m_ralphNp, -25 * taskPtr->get_dt());
+      m_ralphNp.set_y(m_ralphNp, -25 * ClockObject::get_global_clock()->get_dt());
       }
 
    // If ralph is moving, loop the run animation.
@@ -312,8 +314,6 @@ AsyncTask::DoneStatus World::move(GenericAsyncTask* taskPtr)
    m_floaterNp.set_pos(m_ralphNp.get_pos());
    m_floaterNp.set_z(m_ralphNp.get_z() + 2.0);
    cameraNp.look_at(m_floaterNp);
-
-   return AsyncTask::DS_cont;
    }
 
 // Note: OnscreenT//ext is a python only function. It's capabilities are emulated here
@@ -509,15 +509,16 @@ void World::unset_key_cam_right(const Event* eventPtr, void* dataPtr)
    worldPtr->set_key("cam-right", false);
    }
 
-AsyncTask::DoneStatus World::move_task(GenericAsyncTask* taskPtr, void* dataPtr)
+AsyncTask::DoneStatus World::call_move(GenericAsyncTask* taskPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: AsyncTask::DoneStatus World::move(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: AsyncTask::DoneStatus World::call_move(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
       return AsyncTask::DS_done;
       }
 
    World* worldPtr = static_cast<World*>(dataPtr);
-   return worldPtr->move(taskPtr);
+   worldPtr->move();
+   return AsyncTask::DS_cont;
    }

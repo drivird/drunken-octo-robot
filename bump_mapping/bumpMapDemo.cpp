@@ -54,8 +54,10 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    // empty room containing a pillar, a pyramid, and a bunch
    // of exaggeratedly bumpy textures.
 
-   m_roomNp = m_windowFrameworkPtr->load_model(m_windowFrameworkPtr->get_panda_framework()->get_models(), "../models/abstractroom");
-   m_roomNp.reparent_to(m_windowFrameworkPtr->get_render());
+   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
+   m_roomNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/abstractroom");
+   NodePath renderNp = m_windowFrameworkPtr->get_render();
+   m_roomNp.reparent_to(renderNp);
 
    // Make the mouse invisible, turn off normal mouse controls
    // Note: mouse controls are off by default in C++.
@@ -76,7 +78,11 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    m_mouseBtn[B_btn3] = false;
 
    // Start the camera control task:
-   AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("camera-task", control_camera, this));
+   PT(GenericAsyncTask) controlCameraTaskPtr = new GenericAsyncTask("camera-task", call_control_camera, this);
+   if(controlCameraTaskPtr != NULL)
+      {
+      AsyncTaskManager::get_global_ptr()->add(controlCameraTaskPtr);
+      }
    m_windowFrameworkPtr->enable_keyboard();
    m_windowFrameworkPtr->get_panda_framework()->define_key("escape"     , "sysExit"            , sys_exit             , NULL);
    m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1"     , "setMouseBtn1"       , set_mouse_btn1       , this);
@@ -92,7 +98,7 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right", "rotateCamPositive"  , rotate_cam_positive  , this);
 
    // Add a light to the scene.
-   m_lightPivotNp = m_windowFrameworkPtr->get_render().attach_new_node("lightpivot");
+   m_lightPivotNp = renderNp.attach_new_node("lightpivot");
    m_lightPivotNp.set_pos(0, 0, 25);
    // Note: the hprInterval function is a python only extension to NodePath
    PT(CLerpNodePathInterval) cLerpNodePathIntervalPtr = new CLerpNodePathInterval("hprInterval",
@@ -109,7 +115,12 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
       // Note: comment the following line if you want keys `j' and `k' to have an effect.
       cLerpNodePathIntervalPtr->loop();
       }
-   AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("stepIntervalManager", step_interval_manager, NULL));
+   PT(GenericAsyncTask) stepIntervalManagerTaskPtr = new GenericAsyncTask("stepIntervalManager", step_interval_manager, NULL);
+   if(stepIntervalManagerTaskPtr != NULL)
+      {
+      AsyncTaskManager::get_global_ptr()->add(stepIntervalManagerTaskPtr);
+      }
+
 
    NodePath pointLightNp;
    PT(PointLight) pointLightPtr = new PointLight("plight");
@@ -128,12 +139,12 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    if(ambientLightPtr != NULL)
       {
       ambientLightPtr->set_color(Colorf(0.2, 0.2, 0.2, 1));
-      NodePath ambientLightNp = m_windowFrameworkPtr->get_render().attach_new_node(ambientLightPtr);
+      NodePath ambientLightNp = renderNp.attach_new_node(ambientLightPtr);
       m_roomNp.set_light(ambientLightNp);
       }
 
    // create a sphere to denote the light
-   NodePath sphereNp = m_windowFrameworkPtr->load_model(m_windowFrameworkPtr->get_panda_framework()->get_models(), "../models/sphere");
+   NodePath sphereNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/sphere");
    sphereNp.reparent_to(pointLightNp);
 
    // load and apply the shader.  This is using panda's
@@ -178,53 +189,44 @@ void BumpMapDemo::toggle_shader()
       }
    }
 
-AsyncTask::DoneStatus BumpMapDemo::control_camera(GenericAsyncTask* taskPtr, void* dataPtr)
+void BumpMapDemo::control_camera(GenericAsyncTask* taskPtr)
    {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: AsyncTask::DoneStatus BumpMapDemo::control_camera(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return AsyncTask::DS_done;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
    // figure out how much the mouse has moved (in pixels)
-   MouseData mouseData = bumpMapDemoPtr->m_windowFrameworkPtr->get_graphics_window()->get_pointer(0);
+   MouseData mouseData = m_windowFrameworkPtr->get_graphics_window()->get_pointer(0);
    int x = mouseData.get_x();
    int y = mouseData.get_y();
-   if(bumpMapDemoPtr->m_windowFrameworkPtr->get_graphics_window()->move_pointer(0, 100, 100))
+   if(m_windowFrameworkPtr->get_graphics_window()->move_pointer(0, 100, 100))
       {
-      bumpMapDemoPtr->m_heading -= (x - 100) * 0.2;
-      bumpMapDemoPtr->m_pitch   -= (y - 100) * 0.2;
+      m_heading -= (x - 100) * 0.2;
+      m_pitch   -= (y - 100) * 0.2;
       }
-   if(bumpMapDemoPtr->m_pitch < -45){ bumpMapDemoPtr->m_pitch = -45; }
-   if(bumpMapDemoPtr->m_pitch >  45){ bumpMapDemoPtr->m_pitch =  45; }
-   NodePath cameraNp = bumpMapDemoPtr->m_windowFrameworkPtr->get_camera_group();
-   cameraNp.set_hpr(bumpMapDemoPtr->m_heading, bumpMapDemoPtr->m_pitch, 0);
+   if(m_pitch < -45){ m_pitch = -45; }
+   if(m_pitch >  45){ m_pitch =  45; }
+   NodePath cameraNp = m_windowFrameworkPtr->get_camera_group();
+   cameraNp.set_hpr(m_heading, m_pitch, 0);
    LVecBase3f dir = cameraNp.get_mat().get_row3(1);
-   double elapsed = taskPtr->get_elapsed_time() - bumpMapDemoPtr->m_last;
-   if(bumpMapDemoPtr->m_last == 0)
+   double elapsed = taskPtr->get_elapsed_time() - m_last;
+   if(m_last == 0)
       {
       elapsed = 0;
       }
-   if(bumpMapDemoPtr->m_mouseBtn[B_btn1])
+   if(m_mouseBtn[B_btn1])
       {
-      bumpMapDemoPtr->m_focus += dir * elapsed*30;
+      m_focus += dir * elapsed*30;
       }
-   if (bumpMapDemoPtr->m_mouseBtn[B_btn2] || bumpMapDemoPtr->m_mouseBtn[B_btn3])
+   if (m_mouseBtn[B_btn2] || m_mouseBtn[B_btn3])
       {
-      bumpMapDemoPtr->m_focus -= dir * elapsed*30;
+      m_focus -= dir * elapsed*30;
       }
-   cameraNp.set_pos(bumpMapDemoPtr->m_focus - dir*5);
+   cameraNp.set_pos(m_focus - dir*5);
    if(cameraNp.get_x() < -59.0){ cameraNp.set_x(-59); }
    if(cameraNp.get_x() >  59.0){ cameraNp.set_x( 59); }
    if(cameraNp.get_y() < -59.0){ cameraNp.set_y(-59); }
    if(cameraNp.get_y() >  59.0){ cameraNp.set_y( 59); }
    if(cameraNp.get_z() <   5.0){ cameraNp.set_z(  5); }
    if(cameraNp.get_z() >  45.0){ cameraNp.set_z( 45); }
-   bumpMapDemoPtr->m_focus = cameraNp.get_pos() + dir*5;
-   bumpMapDemoPtr->m_last = taskPtr->get_elapsed_time();
-   return AsyncTask::DS_cont;
+   m_focus = cameraNp.get_pos() + dir*5;
+   m_last = taskPtr->get_elapsed_time();
    }
 
 // Note: OnscreenText is a python only function. It's capabilities are emulated here
@@ -396,6 +398,20 @@ void BumpMapDemo::rotate_cam_positive(const Event* eventPtr, void* dataPtr)
 
    BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
    bumpMapDemoPtr->rotate_cam(O_positive);
+   }
+
+AsyncTask::DoneStatus BumpMapDemo::call_control_camera(GenericAsyncTask* taskPtr, void* dataPtr)
+   {
+   // preconditions
+   if(dataPtr == NULL)
+      {
+      nout << "ERROR: AsyncTask::DoneStatus BumpMapDemo::call_control_camera(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      return AsyncTask::DS_done;
+      }
+
+   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
+   bumpMapDemoPtr->control_camera(taskPtr);
+   return AsyncTask::DS_cont;
    }
 
 AsyncTask::DoneStatus BumpMapDemo::step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr)
