@@ -33,7 +33,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    // preconditions
    if(m_windowFrameworkPtr == NULL)
       {
-      nout << "ERROR: BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr) parameter windowFrameworkPtr cannot be NULL." << endl;
+      nout << "ERROR: World::World(WindowFramework* windowFrameworkPtr) parameter windowFrameworkPtr cannot be NULL." << endl;
       return;
       }
 
@@ -316,7 +316,7 @@ void World::move()
    cameraNp.look_at(m_floaterNp);
    }
 
-// Note: OnscreenT//ext is a python only function. It's capabilities are emulated here
+// Note: OnscreenText is a python only function. It's capabilities are emulated here
 //       to simplify the translation to C++.
 NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
    {

@@ -330,7 +330,7 @@ AsyncTask::DoneStatus World::call_turn_head(GenericAsyncTask* taskPtr, void* dat
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: static AsyncTask::DoneStatus World::turnHead(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: static AsyncTask::DoneStatus World::call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
       return AsyncTask::DS_done;
       }
 
