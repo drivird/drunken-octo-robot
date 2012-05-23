@@ -9,8 +9,7 @@
 #include "pandaFramework.h"
 #include "ambientLight.h"
 #include "directionalLight.h"
-#include "partBundleNode.h"
-#include "animBundleNode.h"
+#include "auto_bind.h"
 #include "world.h"
 
 const float SPEED = 0.5; // Note: unused
@@ -75,8 +74,12 @@ World::World(WindowFramework* windowFrameworkPtr)
    // Create the main character, Ralph
    LPoint3f ralphStartPos = m_environNp.find("**/start_point").get_pos();
    m_ralphNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/ralph");
-   add_anim("run", "../models/ralph-run");
-   add_anim("walk", "../models/ralph-walk");
+   map<string, string> ralphAnims;
+   ralphAnims["run"] = "../models/ralph-run";
+   ralphAnims["walk"] = "../models/ralph-walk";
+   auto_bind_named(m_ralphNp, m_animControlCollection, ralphAnims, PartGroup::HMF_ok_part_extra |
+                                                                   PartGroup::HMF_ok_anim_extra |
+                                                                   PartGroup::HMF_ok_wrong_root_name);
    m_ralphNp.reparent_to(renderNp);
    m_ralphNp.set_scale(0.2);
    m_ralphNp.set_pos(ralphStartPos);
@@ -339,39 +342,47 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
    return textNodeNp;
    }
 
-// Note: this is a cheap way to customize to name of an animation like python class Actor does.
-//       Returns the index of the new animation or a negative number on error.
-int World::add_anim(const string& animName, const string& fileName)
+// Note: this is a way to customize the names of the AnimControl(s) collected into an AnimControlCollection by auto_bind().
+//       actorNp            : the actor that we wish to animate.
+//       controls           : the collection of controls returned, just like auto_bind() would do.
+//       animMap            : a map of the desired names (first) and their associated filenames (second).
+//       hierarchyMatchFlags: idem as the same parameter from auto_bind().
+//       This function should be called only once per actor.
+void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
    {
-   NodePath animNp = m_windowFrameworkPtr->load_model(m_ralphNp, fileName);
-   if(animNp.is_empty()) { return -1; }
+   vector<NodePath> anims;
+   anims.reserve(animMap.size());
 
-   NodePath partBundleNp = m_ralphNp.find("**/+PartBundleNode");
-   if(partBundleNp.is_empty()) { return -1; }
-
-   PT(PartBundleNode) partBundleNodePtr = static_cast<PartBundleNode*>(partBundleNp.node());
-   if(partBundleNodePtr == NULL) { return -1; }
-
-   PT(PartBundle) partBundlePtr = partBundleNodePtr->get_bundle(0);
-   if(partBundlePtr == NULL) { return -1; }
-
-   PT(AnimBundle) animBundlePtr = AnimBundleNode::find_anim_bundle(animNp.node());
-   if(animBundlePtr == NULL) { return -1; }
-
-   PT(AnimControl) animControlPtr = partBundlePtr->bind_anim(animBundlePtr);
-   if(animControlPtr == NULL) { return -1; }
-
-   m_animControlCollection.store_anim(animControlPtr, animName);
-
-   // debug
-   /*
-   for(int i = 0; i < m_animControlCollection.get_num_anims(); ++i)
+   // for each animations we are asked to add to the actor
+   for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
       {
-      nout << "Anim #" << i << " is named `" << m_animControlCollection.get_anim_name(i) << "'" << endl;
+      // load the animation as a child of the actor
+      NodePath animNp = m_windowFrameworkPtr->load_model(actorNp, i->second);
+      // collect the animation in a temporary collection
+      AnimControlCollection tempCollection;
+      auto_bind(actorNp.node(), tempCollection, hierarchyMatchFlags);
+      // we should have collected a single animation
+      if(tempCollection.get_num_anims() == 1)
+         {
+         // store the animation in the user's collection
+         controls.store_anim(tempCollection.get_anim(0), i->first);
+         // detach the node so that it will not appear in a new call to auto_bind()
+         animNp.detach_node();
+         // keep it on the side
+         anims.push_back(animNp);
+         }
+      else
+         {
+         // something is wrong
+         nout << "WARNING: could not bind animation `" << i->first << "' from file `" << i->second << "'." << endl;
+         }
       }
-   */
 
-   return m_animControlCollection.get_num_anims()-1;
+   // re-attach the animation nodes to the actor
+   for(vector<NodePath>::iterator i = anims.begin(); i < anims.end(); ++i)
+      {
+      i->reparent_to(actorNp);
+      }
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)

@@ -33,7 +33,7 @@ class World
 
    World(); // to prevent use of the default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
-   int add_anim(const string& animName, const string& fileName);
+   void auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    static void set_key_left(const Event* eventPtr, void* dataPtr);
    static void set_key_right(const Event* eventPtr, void* dataPtr);
