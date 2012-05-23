@@ -76,13 +76,16 @@ World::World(WindowFramework* windowFrameworkPtr)
    //       PartGroup::HMF_ok_wrong_root_name as a third parameter.
    m_windowFrameworkPtr->load_model(m_eveNp, "../models/eve_walk");
    auto_bind(m_eveNp.node(), m_animControlCollection, PartGroup::HMF_ok_wrong_root_name);
-   if(m_animControlCollection.get_num_anims() == 1)
-      {
-      PT(AnimControl) animControlPtr = m_animControlCollection.get_anim(0);
-      m_animControlCollection.store_anim(animControlPtr, "walk");
-      m_animControlCollection.unbind_anim(m_animControlCollection.get_anim_name(0));
-      }
 
+   // Note: this for-loop help to identify which animations have been collected.
+   //for(int i = 0; i < m_animControlCollection.get_num_anims(); ++i)
+   //   {
+   //   nout << "`" << m_animControlCollection.get_anim_name(i) << "'" << endl;
+   //   }
+
+   // Note: rename the animation to fit the original Python version.
+   m_animControlCollection.store_anim(m_animControlCollection.find_anim("eve"), "walk");
+   m_animControlCollection.unbind_anim("eve");
 
    // Put it in the scene
    NodePath renderNp = m_windowFrameworkPtr->get_render();
