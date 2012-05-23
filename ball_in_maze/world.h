@@ -10,9 +10,6 @@
 
 #include "collisionRay.h"
 #include "collisionHandlerQueue.h"
-#include "cLerpNodePathInterval.h"
-#include "waitInterval.h"
-#include "cMetaInterval.h"
 
 class World
    {

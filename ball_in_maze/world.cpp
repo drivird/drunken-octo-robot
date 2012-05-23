@@ -11,6 +11,9 @@
 #include "directionalLight.h"
 #include "material.h"
 #include "mouseWatcher.h"
+#include "cLerpNodePathInterval.h"
+#include "waitInterval.h"
+#include "cMetaInterval.h"
 #include "cIntervalManager.h"
 #include "world.h"
 
