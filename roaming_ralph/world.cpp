@@ -78,9 +78,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    map<string, string> ralphAnims;
    ralphAnims["run"] = "../models/ralph-run";
    ralphAnims["walk"] = "../models/ralph-walk";
-   auto_bind_named(m_ralphNp, m_animControlCollection, ralphAnims, PartGroup::HMF_ok_part_extra |
-                                                                   PartGroup::HMF_ok_anim_extra |
-                                                                   PartGroup::HMF_ok_wrong_root_name);
+   auto_bind_named(m_ralphNp, m_animControlCollection, ralphAnims, PartGroup::HMF_ok_wrong_root_name);
    m_ralphNp.reparent_to(renderNp);
    m_ralphNp.set_scale(0.2);
    m_ralphNp.set_pos(ralphStartPos);
@@ -353,11 +351,12 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
 //       controls           : the collection of controls returned, just like auto_bind() would do.
 //       animMap            : a map of the desired names (first) and their associated filenames (second).
 //       hierarchyMatchFlags: idem as the same parameter from auto_bind().
-//       This function should be called only once per actor.
+//       This function should be called only once per actor, before any animations are reparented to actorNp.
 void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
    {
    vector<NodePath> anims;
    anims.reserve(animMap.size());
+   AnimControlCollection tempCollection;
 
    // for each animations we are asked to add to the actor
    for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
@@ -365,7 +364,6 @@ void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, c
       // load the animation as a child of the actor
       NodePath animNp = m_windowFrameworkPtr->load_model(actorNp, i->second);
       // collect the animation in a temporary collection
-      AnimControlCollection tempCollection;
       auto_bind(actorNp.node(), tempCollection, hierarchyMatchFlags);
       // we should have collected a single animation
       if(tempCollection.get_num_anims() == 1)
@@ -382,6 +380,7 @@ void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, c
          // something is wrong
          nout << "WARNING: could not bind animation `" << i->first << "' from file `" << i->second << "'." << endl;
          }
+      tempCollection.clear_anims();
       }
 
    // re-attach the animation nodes to the actor
