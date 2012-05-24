@@ -55,6 +55,7 @@ class World
 
    World(); // to prevent use of default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
+   void auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int i> static void call_set_object(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr);

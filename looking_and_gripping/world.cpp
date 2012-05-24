@@ -74,18 +74,9 @@ World::World(WindowFramework* windowFrameworkPtr)
    //       correct this in order to bind the animation automatically using
    //       auto_bind() or WindowFramework::loop_animations(). Or you can pass
    //       PartGroup::HMF_ok_wrong_root_name as a third parameter.
-   m_windowFrameworkPtr->load_model(m_eveNp, "../models/eve_walk");
-   auto_bind(m_eveNp.node(), m_animControlCollection, PartGroup::HMF_ok_wrong_root_name);
-
-   // Note: this for-loop help to identify which animations have been collected.
-   //for(int i = 0; i < m_animControlCollection.get_num_anims(); ++i)
-   //   {
-   //   nout << "`" << m_animControlCollection.get_anim_name(i) << "'" << endl;
-   //   }
-
-   // Note: rename the animation to fit the original Python version.
-   m_animControlCollection.store_anim(m_animControlCollection.find_anim("eve"), "walk");
-   m_animControlCollection.unbind_anim("eve");
+   map<string, string> eveAnims;
+   eveAnims["walk"] = "../models/eve_walk";
+   auto_bind_named(m_eveNp, m_animControlCollection, eveAnims, PartGroup::HMF_ok_wrong_root_name);
 
    // Put it in the scene
    NodePath renderNp = m_windowFrameworkPtr->get_render();
@@ -269,6 +260,50 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
       }
 
    return textNodeNp;
+   }
+
+// Note: this is a way to customize the names of the AnimControl(s) collected into an AnimControlCollection by auto_bind().
+//       actorNp            : the actor that we wish to animate.
+//       controls           : the collection of controls returned, just like auto_bind() would do.
+//       animMap            : a map of the desired names (first) and their associated filenames (second).
+//       hierarchyMatchFlags: idem as the same parameter from auto_bind().
+//       This function should be called only once per actor, before any animations are reparented to actorNp.
+void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
+   {
+   vector<NodePath> anims;
+   anims.reserve(animMap.size());
+   AnimControlCollection tempCollection;
+
+   // for each animations we are asked to add to the actor
+   for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
+      {
+      // load the animation as a child of the actor
+      NodePath animNp = m_windowFrameworkPtr->load_model(actorNp, i->second);
+      // collect the animation in a temporary collection
+      auto_bind(actorNp.node(), tempCollection, hierarchyMatchFlags);
+      // we should have collected a single animation
+      if(tempCollection.get_num_anims() == 1)
+         {
+         // store the animation in the user's collection
+         controls.store_anim(tempCollection.get_anim(0), i->first);
+         // detach the node so that it will not appear in a new call to auto_bind()
+         animNp.detach_node();
+         // keep it on the side
+         anims.push_back(animNp);
+         }
+      else
+         {
+         // something is wrong
+         nout << "WARNING: could not bind animation `" << i->first << "' from file `" << i->second << "'." << endl;
+         }
+      tempCollection.clear_anims();
+      }
+
+   // re-attach the animation nodes to the actor
+   for(vector<NodePath>::iterator i = anims.begin(); i < anims.end(); ++i)
+      {
+      i->reparent_to(actorNp);
+      }
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)
