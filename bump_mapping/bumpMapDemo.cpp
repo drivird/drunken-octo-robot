@@ -85,17 +85,17 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
       }
    m_windowFrameworkPtr->enable_keyboard();
    m_windowFrameworkPtr->get_panda_framework()->define_key("escape"     , "sysExit"            , sys_exit             , NULL);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1"     , "setMouseBtn1"       , set_mouse_btn1       , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1-up"  , "setMouseBtn1Up"     , set_mouse_btn1_up    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2"     , "setMouseBtn2"       , set_mouse_btn2       , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2-up"  , "setMouseBtn2Up"     , set_mouse_btn2_up    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3"     , "setMouseBtn3"       , set_mouse_btn3       , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3-up"  , "setMouseBtn3Up"     , set_mouse_btn3_up    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("enter"      , "toggleShader"       , call_toggle_shader   , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("j"          , "rotateLightNegative", rotate_light_negative, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("k"          , "rotateLightPositive", rotate_light_positive, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left" , "rotateCamNegative"  , rotate_cam_negative  , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right", "rotateCamPositive"  , rotate_cam_positive  , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1"     , "setMouseBtn1"       , call_set_mouse_btn<B_btn1, true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse1-up"  , "setMouseBtn1Up"     , call_set_mouse_btn<B_btn1, false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2"     , "setMouseBtn2"       , call_set_mouse_btn<B_btn2, true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse2-up"  , "setMouseBtn2Up"     , call_set_mouse_btn<B_btn2, false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3"     , "setMouseBtn3"       , call_set_mouse_btn<B_btn3, true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("mouse3-up"  , "setMouseBtn3Up"     , call_set_mouse_btn<B_btn3, false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("enter"      , "toggleShader"       , call_toggle_shader               , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("j"          , "rotateLightNegative", call_rotate_light<O_negative    >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("k"          , "rotateLightPositive", call_rotate_light<O_positive    >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left" , "rotateCamNegative"  , call_rotate_cam<O_negative      >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right", "rotateCamPositive"  , call_rotate_cam<O_positive      >, this);
 
    // Add a light to the scene.
    m_lightPivotNp = renderNp.attach_new_node("lightpivot");
@@ -157,7 +157,7 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    m_shaderEnable = true;
    }
 
-void BumpMapDemo::set_mouse_btn(int btn, bool value)
+void BumpMapDemo::set_mouse_btn(Button btn, bool value)
    {
    m_mouseBtn[btn] = value;
    }
@@ -257,82 +257,24 @@ void BumpMapDemo::sys_exit(const Event* eventPtr, void* dataPtr)
    exit(0);
    }
 
-void BumpMapDemo::set_mouse_btn1(const Event* eventPtr, void* dataPtr)
+template<int btn, bool value>
+void BumpMapDemo::call_set_mouse_btn(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void BumpMapDemo::set_mouse_btn1(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int btn, bool value> void BumpMapDemo::call_set_mouse_btn(const Event* eventPtr, void* dataPtr) "
+              "parameter dataPtr cannot be NULL." << endl;
       return;
       }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->set_mouse_btn(B_btn1, true);
-   }
-
-void BumpMapDemo::set_mouse_btn1_up(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
+   if(btn < 0 || btn >= B_buttons)
       {
-      nout << "ERROR: void BumpMapDemo::set_mouse_btn1_up(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int btn, bool value> void BumpMapDemo::call_set_mouse_btn(const Event* eventPtr, void* dataPtr) "
+              "parameter btn is out of range: " << btn << endl;
       return;
       }
 
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->set_mouse_btn(B_btn1, false);
-   }
-
-void BumpMapDemo::set_mouse_btn2(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void BumpMapDemo::set_mouse_btn2(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->set_mouse_btn(B_btn2, true);
-   }
-
-void BumpMapDemo::set_mouse_btn2_up(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void BumpMapDemo::set_mouse_btn2_up(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->set_mouse_btn(B_btn2, false);
-   }
-
-void BumpMapDemo::set_mouse_btn3(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void BumpMapDemo::set_mouse_btn3(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->set_mouse_btn(B_btn3, true);
-   }
-
-void BumpMapDemo::set_mouse_btn3_up(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void BumpMapDemo::set_mouse_btn3_up(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->set_mouse_btn(B_btn3, false);
+   static_cast<BumpMapDemo*>(dataPtr)->set_mouse_btn(static_cast<Button>(btn), value);
    }
 
 void BumpMapDemo::call_toggle_shader(const Event* eventPtr, void* dataPtr)
@@ -348,56 +290,44 @@ void BumpMapDemo::call_toggle_shader(const Event* eventPtr, void* dataPtr)
    bumpMapDemoPtr->toggle_shader();
    }
 
-void BumpMapDemo::rotate_light_positive(const Event* eventPtr, void* dataPtr)
+template<int offset>
+void BumpMapDemo::call_rotate_light(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void BumpMapDemo::rotate_light_inv(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_light(const Event* eventPtr, void* dataPtr) "
+              "parameter dataPtr cannot be NULL." << endl;
+      return;
+      }
+   if(!(offset == -1 || offset == 1))
+      {
+      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_light(const Event* eventPtr, void* dataPtr) "
+              "parameter offset is illegal: " << offset << endl;
       return;
       }
 
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->rotate_light(O_positive);
+   static_cast<BumpMapDemo*>(dataPtr)->rotate_light(static_cast<Offset>(offset));
    }
 
-void BumpMapDemo::rotate_light_negative(const Event* eventPtr, void* dataPtr)
+template<int offset>
+void BumpMapDemo::call_rotate_cam(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void BumpMapDemo::rotate_light(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_cam(const Event* eventPtr, void* dataPtr) "
+              "parameter dataPtr cannot be NULL." << endl;
       return;
       }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->rotate_light(O_negative);
-   }
-
-void BumpMapDemo::rotate_cam_negative(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
+   if(!(offset == -1 || offset == 1))
       {
-      nout << "ERROR: void BumpMapDemo::rotate_cam(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_cam(const Event* eventPtr, void* dataPtr) "
+              "parameter offset is illegal: " << offset << endl;
       return;
       }
 
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->rotate_cam(O_negative);
-   }
-
-void BumpMapDemo::rotate_cam_positive(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void BumpMapDemo::rotate_cam_inv(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   BumpMapDemo* bumpMapDemoPtr = static_cast<BumpMapDemo*>(dataPtr);
-   bumpMapDemoPtr->rotate_cam(O_positive);
+   static_cast<BumpMapDemo*>(dataPtr)->rotate_cam(static_cast<Offset>(offset));
    }
 
 AsyncTask::DoneStatus BumpMapDemo::call_control_camera(GenericAsyncTask* taskPtr, void* dataPtr)

@@ -40,7 +40,7 @@ class BumpMapDemo
 
    NodePath add_title(const string& text) const;
    NodePath add_instructions(float pos, const string& msg) const;
-   void set_mouse_btn(int btn, bool value);
+   void set_mouse_btn(Button btn, bool value);
    void rotate_light(Offset offset);
    void rotate_cam(Offset offset);
    void toggle_shader();
@@ -49,17 +49,10 @@ class BumpMapDemo
    BumpMapDemo(); // to prevent use of the default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    static void sys_exit(const Event* eventPtr, void* dataPtr);
-   static void set_mouse_btn1(const Event* eventPtr, void* dataPtr);
-   static void set_mouse_btn1_up(const Event* eventPtr, void* dataPtr);
-   static void set_mouse_btn2(const Event* eventPtr, void* dataPtr);
-   static void set_mouse_btn2_up(const Event* eventPtr, void* dataPtr);
-   static void set_mouse_btn3(const Event* eventPtr, void* dataPtr);
-   static void set_mouse_btn3_up(const Event* eventPtr, void* dataPtr);
+   template<int btn, bool value> static void call_set_mouse_btn(const Event* eventPtr, void* dataPtr);
    static void call_toggle_shader(const Event* eventPtr, void* dataPtr);
-   static void rotate_light_positive(const Event* eventPtr, void* dataPtr);
-   static void rotate_light_negative(const Event* eventPtr, void* dataPtr);
-   static void rotate_cam_negative(const Event* eventPtr, void* dataPtr);
-   static void rotate_cam_positive(const Event* eventPtr, void* dataPtr);
+   template<int offset> static void call_rotate_light(const Event* eventPtr, void* dataPtr);
+   template<int offset> static void call_rotate_cam(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_control_camera(GenericAsyncTask* taskPtr, void* dataPtr);
    static AsyncTask::DoneStatus step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr);
 

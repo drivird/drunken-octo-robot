@@ -36,11 +36,12 @@ World::World(WindowFramework* windowFrameworkPtr)
       return;
       }
 
-   m_keyMap["left"     ] = false;
-   m_keyMap["right"    ] = false;
-   m_keyMap["forward"  ] = false;
-   m_keyMap["cam-left" ] = false;
-   m_keyMap["cam-right"] = false;
+   m_keyMap.resize(K_keys);
+   m_keyMap[K_left     ] = false;
+   m_keyMap[K_right    ] = false;
+   m_keyMap[K_forward  ] = false;
+   m_keyMap[K_cam_left ] = false;
+   m_keyMap[K_cam_right] = false;
    m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->set_clear_color(Colorf(0,0,0,1));
 
    // Post the instructions
@@ -92,17 +93,17 @@ World::World(WindowFramework* windowFrameworkPtr)
 
    // Accept the control keys for movement and rotation
    m_windowFrameworkPtr->enable_keyboard();
-   m_windowFrameworkPtr->get_panda_framework()->define_key("escape"        , "sysExit"    , sys_exit           , NULL);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left"    , "left"       , set_key_left       , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right"   , "right"      , set_key_right      , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up"      , "forward"    , set_key_forward    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("a"             , "cam-left"   , set_key_cam_left   , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("s"             , "cam-right"  , set_key_cam_right  , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left-up" , "leftUp"     , unset_key_left     , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right-up", "rightUp"    , unset_key_right    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up-up"   , "forwardUp"  , unset_key_forward  , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("a-up"          , "cam-leftUp" , unset_key_cam_left , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("s-up"          , "cam-rightUp", unset_key_cam_right, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("escape"        , "sysExit"    , sys_exit                        , NULL);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left"    , "left"       , call_set_key<K_left     , true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right"   , "right"      , call_set_key<K_right    , true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up"      , "forward"    , call_set_key<K_forward  , true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("a"             , "cam-left"   , call_set_key<K_cam_left , true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("s"             , "cam-right"  , call_set_key<K_cam_right, true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left-up" , "leftUp"     , call_set_key<K_left     , false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right-up", "rightUp"    , call_set_key<K_right    , false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up-up"   , "forwardUp"  , call_set_key<K_forward  , false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("a-up"          , "cam-leftUp" , call_set_key<K_cam_left , false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("s-up"          , "cam-rightUp", call_set_key<K_cam_right, false>, this);
 
    PT(GenericAsyncTask) taskPtr = new GenericAsyncTask("moveTask", call_move, this);
    if(taskPtr != NULL)
@@ -194,8 +195,13 @@ World::World(WindowFramework* windowFrameworkPtr)
    }
 
 // Records the state of the arrow keys
-void World::set_key(const string& key, bool value)
+void World::set_key(Key key, bool value)
    {
+   if(key < 0 || (unsigned int)key >= m_keyMap.size())
+      {
+      nout << "void World::set_key(Key key, bool value) parameter key is out of range: " << key << endl;
+      }
+
    m_keyMap[key] = value;
    }
 
@@ -208,11 +214,11 @@ void World::move()
 
    NodePath cameraNp = m_windowFrameworkPtr->get_camera_group();
    cameraNp.look_at(m_ralphNp);
-   if(m_keyMap["cam-left"] != false)
+   if(m_keyMap[K_cam_left] != false)
       {
       cameraNp.set_x(cameraNp, -20 * ClockObject::get_global_clock()->get_dt());
       }
-   if(m_keyMap["cam-right"] != false)
+   if(m_keyMap[K_cam_right] != false)
       {
       cameraNp.set_x(cameraNp, +20 * ClockObject::get_global_clock()->get_dt());
       }
@@ -224,15 +230,15 @@ void World::move()
 
    // If a move-key is pressed, move ralph in the specified direction.
 
-   if(m_keyMap["left"])
+   if(m_keyMap[K_left])
       {
       m_ralphNp.set_h(m_ralphNp.get_h() + 300 * ClockObject::get_global_clock()->get_dt());
       }
-   if(m_keyMap["right"])
+   if(m_keyMap[K_right])
       {
       m_ralphNp.set_h(m_ralphNp.get_h() - 300 * ClockObject::get_global_clock()->get_dt());
       }
-   if(m_keyMap["forward"])
+   if(m_keyMap[K_forward])
       {
       m_ralphNp.set_y(m_ralphNp, -25 * ClockObject::get_global_clock()->get_dt());
       }
@@ -240,7 +246,7 @@ void World::move()
    // If ralph is moving, loop the run animation.
    // If he is standing still, stop the animation.
 
-   if(m_keyMap["forward"] || m_keyMap["left"] || m_keyMap["right"])
+   if(m_keyMap[K_forward] || m_keyMap[K_left] || m_keyMap[K_right])
       {
        if(!m_isMoving)
           {
@@ -390,134 +396,24 @@ void World::sys_exit(const Event* eventPtr, void* dataPtr)
    exit(0);
    }
 
-void World::set_key_left(const Event* eventPtr, void* dataPtr)
+template<int key, bool value>
+void World::call_set_key(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_key_left(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int key> void World::call_set_key(const Event* eventPtr, void* dataPtr) "
+              "parameter dataPtr cannot be NULL." << endl;
       return;
       }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("left", true);
-   }
-
-void World::set_key_right(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
+   if(key < 0 || key >= K_keys)
       {
-      nout << "ERROR: void World::set_key_right(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int key> void World::call_set_key(const Event* eventPtr, void* dataPtr) "
+              "parameter key is out of range: " << key << endl;
       return;
       }
 
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("right", true);
-   }
-
-void World::set_key_forward(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_key_forward(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("forward", true);
-   }
-
-void World::set_key_cam_left(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_key_cam_left(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("cam-left", true);
-   }
-
-void World::set_key_cam_right(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_key_cam_right(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("cam-right", true);
-   }
-
-void World::unset_key_left(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_key_left(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("left", false);
-   }
-
-void World::unset_key_right(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_key_right(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("right", false);
-   }
-
-void World::unset_key_forward(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_key_forward(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("forward", false);
-   }
-
-void World::unset_key_cam_left(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_key_cam_left(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("cam-left", false);
-   }
-
-void World::unset_key_cam_right(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_key_cam_right(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("cam-right", false);
+   static_cast<World*>(dataPtr)->set_key(static_cast<Key>(key), value);
    }
 
 AsyncTask::DoneStatus World::call_move(GenericAsyncTask* taskPtr, void* dataPtr)

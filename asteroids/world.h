@@ -17,6 +17,15 @@ class World
 
    private:
 
+   enum Key
+      {
+      K_turn_left = 0,
+      K_turn_right,
+      K_accel,
+      K_fire,
+      K_keys
+      };
+
    // Constants that will control the behavior of the game. It is good to group
    // constants like this so that they can be changed once without having to find
    // everywhere they are used in code
@@ -56,7 +65,7 @@ class World
                         float scale = 1,
                         bool transparency = true) const;
    NodePath gen_label_text(const string& text, int i) const;
-   void set_key(const string& key, bool val);
+   void set_key(Key key, bool val);
    void set_velocity(NodePath objNp, const LVecBase3f& val);
    LVecBase3f get_velocity(NodePath objNp) const;
    void set_expires(NodePath objNp, float val);
@@ -70,13 +79,7 @@ class World
 
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    static void sys_exit(const Event* eventPtr, void* dataPtr);
-   static void set_turn_left(const Event* eventPtr, void* dataPtr);
-   static void unset_turn_left(const Event* eventPtr, void* dataPtr);
-   static void set_turn_right(const Event* eventPtr, void* dataPtr);
-   static void unset_turn_right(const Event* eventPtr, void* dataPtr);
-   static void set_accel(const Event* eventPtr, void* dataPtr);
-   static void unset_accel(const Event* eventPtr, void* dataPtr);
-   static void set_fire(const Event* eventPtr, void* dataPtr);
+   template<int key, bool value> static void call_set_key(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_game_loop(GenericAsyncTask* taskPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_restart(GenericAsyncTask* taskPtr, void* dataPtr);
    void restart();
@@ -91,7 +94,7 @@ class World
    NodePath m_spaceKeyTextNp;
    NodePath m_bgNp;
    NodePath m_shipNp;
-   map<string, bool> m_keys;
+   vector<bool> m_keys;
    list<NodePath> m_bullets;
    list<NodePath> m_asteroids;
    double m_last;

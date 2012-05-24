@@ -106,22 +106,23 @@ World::World(WindowFramework* windowFrameworkPtr)
 
    // A dictionary of what keys are currently being pressed
    // The key events update this list, and our task will query it as input
-   m_keys["turnLeft" ] = false;
-   m_keys["turnRight"] = false;
-   m_keys["accel"    ] = false;
-   m_keys["fire"     ] = false;
+   m_keys.resize(K_keys);
+   m_keys[K_turn_left ] = false;
+   m_keys[K_turn_right] = false;
+   m_keys[K_accel     ] = false;
+   m_keys[K_fire      ] = false;
 
    m_windowFrameworkPtr->enable_keyboard();
    // Escape quits
    m_windowFrameworkPtr->get_panda_framework()->define_key("escape",         "sysExit",     sys_exit,         NULL);
    // Other keys events set the appropriate value in our key dictionary
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left",     "turnLeft",    set_turn_left,    this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left-up",  "turnLeftUp",  unset_turn_left,  this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right",    "turnRight",   set_turn_right,   this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right-up", "turnRightUp", unset_turn_right, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up",       "accel",       set_accel,        this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up-up",    "accelUp",     unset_accel,      this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("space",          "fire",        set_fire,         this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left"    , "turnLeft"   , call_set_key<K_turn_left , true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_left-up" , "turnLeftUp" , call_set_key<K_turn_left , false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right"   , "turnRight"  , call_set_key<K_turn_right, true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_right-up", "turnRightUp", call_set_key<K_turn_right, false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up"      , "accel"      , call_set_key<K_accel     , true >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up-up"   , "accelUp"    , call_set_key<K_accel     , false>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("space"         , "fire"       , call_set_key<K_fire      , true >, this);
 
    // Now we create the task. taskMgr is the task manager that actually calls
    // The function each frame. The add method creates a new task. The first
@@ -153,7 +154,7 @@ World::World(WindowFramework* windowFrameworkPtr)
 
 // As described earlier, this simply sets a key in the m_keys dictionary to
 // the given value
-void World::set_key(const string& key, bool val)
+void World::set_key(Key key, bool val)
    {
    m_keys[key] = val;
    }
@@ -281,7 +282,7 @@ AsyncTask::DoneStatus World::game_loop(GenericAsyncTask* taskPtr)
    update_ship(dt);
 
    // check to see if the ship can fire
-   if(m_keys["fire"] && time > m_nextBullet)
+   if(m_keys[K_fire] && time > m_nextBullet)
       {
       // If so, call the fire function
       fire(time);
@@ -289,7 +290,7 @@ AsyncTask::DoneStatus World::game_loop(GenericAsyncTask* taskPtr)
       m_nextBullet = time + BULLET_REPEAT;
       }
    // Remove the fire flag until the next spacebar press
-   m_keys["fire"] = false;
+   m_keys[K_fire] = false;
 
    // update asteroids
    list<NodePath>::iterator objPtr;
@@ -469,13 +470,13 @@ void World::update_ship(double dt)
    // Heading is the roll value for this model
    float heading = m_shipNp.get_r();
    // Change heading if left or right is being pressed
-   if(m_keys["turnRight"])
+   if(m_keys[K_turn_right])
       {
       heading += dt * TURN_RATE;
       while(heading > 360) { heading -= 360; }
       m_shipNp.set_r(heading);
       }
-   else if(m_keys["turnLeft"])
+   else if(m_keys[K_turn_left])
       {
       heading -= dt * TURN_RATE;
       while(heading < 0) { heading += 360; }
@@ -483,7 +484,7 @@ void World::update_ship(double dt)
       }
 
    // Thrust causes acceleration in the direction the ship is currently facing
-   if(m_keys["accel"])
+   if(m_keys[K_accel])
       {
       float heading_rad = DEG_TO_RAD * heading;
       // This builds a new velocity vector and adds it to the current one
@@ -554,95 +555,24 @@ void World::sys_exit(const Event* eventPtr, void* dataPtr)
    exit(0);
    }
 
-void World::set_turn_left(const Event* eventPtr, void* dataPtr)
+template<int key, bool value>
+void World::call_set_key(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_turn_left(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int key, bool value> void World::call_set_key(const Event* eventPtr, void* dataPtr) "
+              "parameter dataPtr cannot be NULL." << endl;
       return;
       }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("turnLeft", true);
-   }
-
-void World::unset_turn_left(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
+   if(key < 0 || key >= K_keys)
       {
-      nout << "ERROR: void World::unset_turn_left(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int key, bool value> void World::call_set_key(const Event* eventPtr, void* dataPtr) "
+              "parameter key is out of range: " << key << endl;
       return;
       }
 
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("turnLeft", false);
-   }
-
-void World::set_turn_right(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_turn_right(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("turnRight", true);
-   }
-
-void World::unset_turn_right(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_turn_right(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("turnRight", false);
-   }
-
-void World::set_accel(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_accel(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("accel", true);
-   }
-
-void World::unset_accel(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::unset_accel(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("accel", false);
-   }
-
-void World::set_fire(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_fire(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_key("fire", true);
+   static_cast<World*>(dataPtr)->set_key(static_cast<Key>(key), value);
    }
 
 AsyncTask::DoneStatus World::call_game_loop(GenericAsyncTask* taskPtr, void* dataPtr)

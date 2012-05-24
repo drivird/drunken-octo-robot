@@ -52,10 +52,10 @@ World::World(WindowFramework* windowFrameworkPtr)
    // setup key input
    m_windowFrameworkPtr->enable_keyboard();
    m_windowFrameworkPtr->get_panda_framework()->define_key("escape", "Exit"     , sys_exit      , NULL);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("1"     , "Teapot"   , set_teapot    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("2"     , "CandyCane", set_candy_cane, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("3"     , "Banana"   , set_banana    , this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("4"     , "Sword"    , set_sword     , this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("1"     , "Teapot"   , call_set_object<M_teapot    >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("2"     , "CandyCane", call_set_object<M_candy_cane>, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("3"     , "Banana"   , call_set_object<M_banana    >, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("4"     , "Sword"    , call_set_object<M_sword     >, this);
 
    // Disable mouse-based camera-control
    // Note: disable by default in C++
@@ -162,10 +162,10 @@ World::World(WindowFramework* windowFrameworkPtr)
    // be attached to our exposed joint. These are stock models and so they needed
    // to be repositioned to look right.
    vector<ModelData> positions(M_models);
-   positions[M_teapot]     = ModelData("../models/teapot"   , LVecBase3f(0.00,-0.66,-0.95), LVecBase3f(90,  0,90), 0.40);
+   positions[M_teapot    ] = ModelData("../models/teapot"   , LVecBase3f(0.00,-0.66,-0.95), LVecBase3f(90,  0,90), 0.40);
    positions[M_candy_cane] = ModelData("../models/candycane", LVecBase3f(0.15,-0.99,-0.22), LVecBase3f(90,  0,90), 1.00);
-   positions[M_banana]     = ModelData("../models/banana"   , LVecBase3f(0.08,-0.10, 0.09), LVecBase3f( 0,-90, 0), 1.75);
-   positions[M_sword]      = ModelData("../models/sword"    , LVecBase3f(0.11, 0.19, 0.06), LVecBase3f( 0,  0,90), 1.00);
+   positions[M_banana    ] = ModelData("../models/banana"   , LVecBase3f(0.08,-0.10, 0.09), LVecBase3f( 0,-90, 0), 1.75);
+   positions[M_sword     ] = ModelData("../models/sword"    , LVecBase3f(0.11, 0.19, 0.06), LVecBase3f( 0,  0,90), 1.00);
    // A list that will store our models objects
    m_modelsNp.reserve(M_models);
    for(vector<ModelData>::iterator i = positions.begin(); i < positions.end(); ++i)
@@ -193,7 +193,7 @@ World::World(WindowFramework* windowFrameworkPtr)
 
 // This is what we use to change which object it being held. It just hides all of
 // the objects and then unhides the one that was selected
-void World::set_object(int i)
+void World::set_object(Model i)
    {
    // preconditions
    if(i < 0 || (unsigned int)i >= m_modelsNp.size())
@@ -276,56 +276,24 @@ void World::sys_exit(const Event* eventPtr, void* dataPtr)
    exit(0);
    }
 
-void World::set_teapot(const Event* eventPtr, void* dataPtr)
+template<int i>
+void World::call_set_object(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::set_teapot(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int i> void World::call_set_object(const Event* eventPtr, void* dataPtr) "
+              "parameter dataPtr cannot be NULL." << endl;
       return;
       }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_object(M_teapot);
-   }
-
-void World::set_candy_cane(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
+   if(i < 0 || i >= M_models)
       {
-      nout << "ERROR: void World::set_candy_cane(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: template<int i> void World::call_set_object(const Event* eventPtr, void* dataPtr) "
+              "parameter is out of range: " << i << endl;
       return;
       }
 
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_object(M_candy_cane);
-   }
-
-void World::set_banana(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_banana(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_object(M_banana);
-   }
-
-void World::set_sword(const Event* eventPtr, void* dataPtr)
-   {
-   // preconditions
-   if(dataPtr == NULL)
-      {
-      nout << "ERROR: void World::set_sword(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return;
-      }
-
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->set_object(M_sword);
+   static_cast<World*>(dataPtr)->set_object(static_cast<Model>(i));
    }
 
 AsyncTask::DoneStatus World::call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr)

@@ -26,29 +26,30 @@ class World
       A_right  = TextNode::A_right
       };
 
+   enum Key
+      {
+      K_left = 0,
+      K_right,
+      K_forward,
+      K_cam_left,
+      K_cam_right,
+      K_keys
+      };
+
    NodePath add_title(const string& text) const;
    NodePath add_instructions(float pos, const string& msg) const;
-   void set_key(const string& key, bool value);
+   void set_key(Key key, bool value);
    void move();
 
    World(); // to prevent use of the default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    void auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
-   static void set_key_left(const Event* eventPtr, void* dataPtr);
-   static void set_key_right(const Event* eventPtr, void* dataPtr);
-   static void set_key_forward(const Event* eventPtr, void* dataPtr);
-   static void set_key_cam_left(const Event* eventPtr, void* dataPtr);
-   static void set_key_cam_right(const Event* eventPtr, void* dataPtr);
-   static void unset_key_left(const Event* eventPtr, void* dataPtr);
-   static void unset_key_right(const Event* eventPtr, void* dataPtr);
-   static void unset_key_forward(const Event* eventPtr, void* dataPtr);
-   static void unset_key_cam_left(const Event* eventPtr, void* dataPtr);
-   static void unset_key_cam_right(const Event* eventPtr, void* dataPtr);
+   template<int key, bool value> static void call_set_key(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_move(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
-   map<string, bool> m_keyMap;
+   vector<bool> m_keyMap;
    NodePath m_titleNp;
    NodePath m_inst1Np;
    NodePath m_inst2Np;

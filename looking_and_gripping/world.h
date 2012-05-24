@@ -49,17 +49,14 @@ class World
 
    static float restrain(float i, float mn = -1, float mx = 1);
    NodePath gen_label_text(const string& text, int i) const;
-   void set_object(int i);
+   void set_object(Model i);
    void turn_head();
    void setup_lights() const;
 
    World(); // to prevent use of default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    static void sys_exit(const Event* eventPtr, void* dataPtr);
-   static void set_teapot(const Event* eventPtr, void* dataPtr);
-   static void set_candy_cane(const Event* eventPtr, void* dataPtr);
-   static void set_banana(const Event* eventPtr, void* dataPtr);
-   static void set_sword(const Event* eventPtr, void* dataPtr);
+   template<int i> static void call_set_object(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
