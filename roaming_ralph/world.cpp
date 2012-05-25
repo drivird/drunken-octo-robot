@@ -74,11 +74,10 @@ World::World(WindowFramework* windowFrameworkPtr)
 
    // Create the main character, Ralph
    LPoint3f ralphStartPos = m_environNp.find("**/start_point").get_pos();
-   m_ralphNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/ralph");
    map<string, string> ralphAnims;
    ralphAnims["run"] = "../models/ralph-run";
    ralphAnims["walk"] = "../models/ralph-walk";
-   auto_bind_named(m_ralphNp, m_animControlCollection, ralphAnims, PartGroup::HMF_ok_wrong_root_name);
+   m_ralphNp = load_actor(&m_animControlCollection, "../models/ralph", ralphAnims, PartGroup::HMF_ok_wrong_root_name);
    m_ralphNp.reparent_to(renderNp);
    m_ralphNp.set_scale(0.2);
    m_ralphNp.set_pos(ralphStartPos);
@@ -346,19 +345,33 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
    return textNodeNp;
    }
 
-// Note: this is a way to customize the names of the AnimControl(s) collected into an AnimControlCollection by auto_bind().
-//       actorNp            : the actor that we wish to animate.
-//       controls           : the collection of controls returned, just like auto_bind() would do.
-//       animMap            : a map of the desired names (first) and their associated filenames (second).
+// Note: this function emulates bits of functionality from the ptyhon class Actor used in the original tutorial.
+//       It loads an actor model and its animations, letting the user specify the name of each animation.
+//       return value       : the actor, parented to the framework's models node (to render the actor, reparent it to the render node)
+//       controlsPtr        : the collection of controls returned, much like auto_bind() would do.
+//       actorFilename      : the actor's egg file
+//       animMap            : a map of the desired name (first) of each animation and its associated file (second).
 //       hierarchyMatchFlags: idem as the same parameter from auto_bind().
-//       This function should be called only once per actor, before any animations are reparented to actorNp.
-void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
+NodePath World::load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
    {
-   vector<NodePath> anims;
-   anims.reserve(animMap.size());
-   AnimControlCollection tempCollection;
+   NodePath actorNp;
 
-   // for each animations we are asked to add to the actor
+   // precondition
+   if(controlsPtr == NULL)
+      {
+      nout << "ERROR: parameter controlsPtr cannot be NULL." << endl;
+      return actorNp;
+      }
+
+   // first load the actor model
+   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
+   actorNp = m_windowFrameworkPtr->load_model(modelsNp, actorFilename);
+
+   AnimControlCollection tempCollection;
+   vector<NodePath> animsNp;
+   animsNp.reserve(animMap.size());
+
+   // then for each animations specified by the user
    for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
       {
       // load the animation as a child of the actor
@@ -369,11 +382,11 @@ void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, c
       if(tempCollection.get_num_anims() == 1)
          {
          // store the animation in the user's collection
-         controls.store_anim(tempCollection.get_anim(0), i->first);
+         controlsPtr->store_anim(tempCollection.get_anim(0), i->first);
          // detach the node so that it will not appear in a new call to auto_bind()
          animNp.detach_node();
          // keep it on the side
-         anims.push_back(animNp);
+         animsNp.push_back(animNp);
          }
       else
          {
@@ -384,10 +397,12 @@ void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, c
       }
 
    // re-attach the animation nodes to the actor
-   for(vector<NodePath>::iterator i = anims.begin(); i < anims.end(); ++i)
+   for(vector<NodePath>::iterator np = animsNp.begin(); np < animsNp.end(); ++np)
       {
-      i->reparent_to(actorNp);
+      np->reparent_to(actorNp);
       }
+
+   return actorNp;
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)

@@ -64,19 +64,16 @@ World::World(WindowFramework* windowFrameworkPtr)
    m_windowFrameworkPtr->get_camera_group().set_pos(0,-15, 2);
 
    // Load our animated character
-   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
-   m_eveNp = m_windowFrameworkPtr->load_model(modelsNp, "../models/eve");
-
-   // Load the character's walk animation
    // Note: File eve_walk.egg is broken!
    //       The name of the animation is case sensitive and at line 13 of file
    //       eve_walk.egg you should read `Eve' instead of `eve'. You need to
    //       correct this in order to bind the animation automatically using
-   //       auto_bind() or WindowFramework::loop_animations(). Or you can pass
-   //       PartGroup::HMF_ok_wrong_root_name as a third parameter.
+   //       auto_bind() or WindowFramework::loop_animations(). Or you can use
+   //       PartGroup::HMF_ok_wrong_root_name to ask auto_bind() to be more
+   //       forgiving.
    map<string, string> eveAnims;
    eveAnims["walk"] = "../models/eve_walk";
-   auto_bind_named(m_eveNp, m_animControlCollection, eveAnims, PartGroup::HMF_ok_wrong_root_name);
+   m_eveNp = load_actor(&m_animControlCollection, "../models/eve", eveAnims, PartGroup::HMF_ok_wrong_root_name);
 
    // Put it in the scene
    NodePath renderNp = m_windowFrameworkPtr->get_render();
@@ -159,6 +156,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    positions[M_sword     ] = ModelData("../models/sword"    , LVecBase3f(0.11, 0.19, 0.06), LVecBase3f( 0,  0,90), 1.00);
    // A list that will store our models objects
    m_modelsNp.reserve(M_models);
+   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
    for(vector<ModelData>::iterator i = positions.begin(); i < positions.end(); ++i)
       {
       // Load the model
@@ -262,19 +260,33 @@ NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint
    return textNodeNp;
    }
 
-// Note: this is a way to customize the names of the AnimControl(s) collected into an AnimControlCollection by auto_bind().
-//       actorNp            : the actor that we wish to animate.
-//       controls           : the collection of controls returned, just like auto_bind() would do.
-//       animMap            : a map of the desired names (first) and their associated filenames (second).
+// Note: this function emulates bits of functionality from the ptyhon class Actor used in the original tutorial.
+//       It loads an actor model and its animations, letting the user specify the name of each animation.
+//       return value       : the actor, parented to the framework's models node (to render the actor, reparent it to the render node)
+//       controlsPtr        : the collection of controls returned, much like auto_bind() would do.
+//       actorFilename      : the actor's egg file
+//       animMap            : a map of the desired name (first) of each animation and its associated file (second).
 //       hierarchyMatchFlags: idem as the same parameter from auto_bind().
-//       This function should be called only once per actor, before any animations are reparented to actorNp.
-void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
+NodePath World::load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
    {
-   vector<NodePath> anims;
-   anims.reserve(animMap.size());
-   AnimControlCollection tempCollection;
+   NodePath actorNp;
 
-   // for each animations we are asked to add to the actor
+   // precondition
+   if(controlsPtr == NULL)
+      {
+      nout << "ERROR: parameter controlsPtr cannot be NULL." << endl;
+      return actorNp;
+      }
+
+   // first load the actor model
+   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
+   actorNp = m_windowFrameworkPtr->load_model(modelsNp, actorFilename);
+
+   AnimControlCollection tempCollection;
+   vector<NodePath> animsNp;
+   animsNp.reserve(animMap.size());
+
+   // then for each animations specified by the user
    for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
       {
       // load the animation as a child of the actor
@@ -285,11 +297,11 @@ void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, c
       if(tempCollection.get_num_anims() == 1)
          {
          // store the animation in the user's collection
-         controls.store_anim(tempCollection.get_anim(0), i->first);
+         controlsPtr->store_anim(tempCollection.get_anim(0), i->first);
          // detach the node so that it will not appear in a new call to auto_bind()
          animNp.detach_node();
          // keep it on the side
-         anims.push_back(animNp);
+         animsNp.push_back(animNp);
          }
       else
          {
@@ -300,10 +312,12 @@ void World::auto_bind_named(NodePath actorNp, AnimControlCollection &controls, c
       }
 
    // re-attach the animation nodes to the actor
-   for(vector<NodePath>::iterator i = anims.begin(); i < anims.end(); ++i)
+   for(vector<NodePath>::iterator np = animsNp.begin(); np < animsNp.end(); ++np)
       {
-      i->reparent_to(actorNp);
+      np->reparent_to(actorNp);
       }
+
+   return actorNp;
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)

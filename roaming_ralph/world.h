@@ -43,7 +43,7 @@ class World
 
    World(); // to prevent use of the default constructor
    NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
-   void auto_bind_named(NodePath actorNp, AnimControlCollection &controls, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
+   NodePath load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int key, bool value> static void call_set_key(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_move(GenericAsyncTask* taskPtr, void* dataPtr);
