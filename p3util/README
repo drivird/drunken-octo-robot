@@ -1,0 +1,14 @@
+This is directory of Panda3D utilities used in the translation to C++ of the 
+python program samples. Most are based on their python counterpart but only
+the minimal set of features gets implemented.
+
+Developped on a GNU/Linux Ubuntu distribution, using Eclipse as IDE and 
+Panda3d 1.7 as a framework.
+
+The main objective of this work is for me to learn about Panda3d, C++ and 3d 
+games in general. As such, it aims at being C++ programs while remaining 
+close to the original python scripts. I hope you find it helpful and of course,
+constructive critics are always welcome.
+
+-- dri, May 28th 2012
+
