@@ -28,7 +28,7 @@ GenericFunctionInterval::GenericFunctionInterval(const string& name,
 
 GenericFunctionInterval::~GenericFunctionInterval()
    {
-   --InstanceCounter;
+   ;
    }
 
 void GenericFunctionInterval::priv_instant()
