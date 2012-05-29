@@ -19,12 +19,6 @@ class World
 
    private:
 
-   enum Alignment
-      {
-      A_center  = TextNode::A_center,
-      A_left   = TextNode::A_left
-      };
-
    enum RobotId
       {
       R_robot1,
@@ -43,7 +37,6 @@ class World
    void setup_lights();
 
    World(); // to prevent use of the default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    template<int robotId, int punchId> static void call_try_punch(const Event* eventPtr, void* dataPtr);
    template<int robotId> static void call_check_punch(void* dataPtr);
    static void sys_exit(const Event* eventPtr, void* dataPtr);

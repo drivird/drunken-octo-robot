@@ -5,6 +5,7 @@
  *      Author: dri
  */
 
+#include "../p3util/cOnscreenText.h"
 #include "../p3util/cActorInterval.h"
 #include "../p3util/genericFunctionInterval.h"
 #include "directionalLight.h"
@@ -17,7 +18,12 @@
 // on screen instructions
 NodePath World::gen_label_text(const string& text, int i) const
    {
-   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(-1.3, 0.95-0.05*i), A_left, 0.05);
+   return COnscreenText(m_windowFrameworkPtr,
+                        text,
+                        Colorf(1,1,1,1),
+                        LPoint2f(-1.3, 0.95-0.05*i),
+                        COnscreenText::A_left,
+                        0.05);
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -31,8 +37,12 @@ World::World(WindowFramework* windowFrameworkPtr)
       }
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = onscreen_text("Panda3D: Tutorial - Actors", Colorf(0,0,0,1),
-                             LPoint2f(0.8,-0.95), A_center, 0.07);
+   m_titleNp = COnscreenText(m_windowFrameworkPtr,
+                             "Panda3D: Tutorial - Actors",
+                             Colorf(0,0,0,1),
+                             LPoint2f(0.8,-0.95),
+                             COnscreenText::A_center,
+                             0.07);
    m_escapeEventTextNp = gen_label_text("ESC: Quit", 0);
    m_aKeyEventTextNp = gen_label_text("[A]: Robot 1 Left Punch" , 1);
    m_sKeyEventTextNp = gen_label_text("[S]: Robot 1 Right Punch", 2);
@@ -308,29 +318,6 @@ void World::setup_lights()
       directionalLightPtr->set_color(Colorf( 0.9, 0.8, 0.9, 1 ));
       renderNp.set_light(renderNp.attach_new_node(directionalLightPtr));
       }
-   }
-
-// Note: onscreen_text is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
-   {
-   NodePath textNodeNp;
-
-   if(m_windowFrameworkPtr != NULL)
-      {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
-      }
-
-   return textNodeNp;
    }
 
 AsyncTask::DoneStatus World::step_interval_manager(GenericAsyncTask *taskPtr, void *dataPtr)
