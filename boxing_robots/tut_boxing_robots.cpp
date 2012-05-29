@@ -5,7 +5,7 @@
  *      Author: dri
  *
  * This is a python to C++ translation of Panda3d 1.7 sample/tutorial:
- * Tut-Ball-in-Maze.py
+ * Tut-Boxing-Robots.py
  *
  * Here's the original python tutorial header:
  *
