@@ -52,12 +52,6 @@ class World
    static const float AST_MIN_SCALE  = 1.1; // If and asteroid is smaller than this and is hit,
                                             // it disappears instead of splitting up
 
-   enum Alignment
-      {
-      A_center  = TextNode::A_center,
-      A_left   = TextNode::A_left
-      };
-
    World(); // to prevent use of the default constructor
    NodePath load_object(const string& tex = "",
                         const LPoint2f& pos = LPoint2f(0,0),
@@ -77,12 +71,10 @@ class World
    void update_ship(double dt);
    void fire(double time);
 
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int key, bool value> static void call_set_key(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_game_loop(GenericAsyncTask* taskPtr, void* dataPtr);
-   static AsyncTask::DoneStatus call_restart(GenericAsyncTask* taskPtr, void* dataPtr);
-   void restart();
+   static void call_spawn_asteroids(void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
    PT(GenericAsyncTask) m_gameTaskPtr;

@@ -5,8 +5,15 @@
  *      Author: dri
  */
 
+#include "../p3util/cOnscreenText.h"
+#include "../p3util/genericFunctionInterval.h"
 #include "pandaFramework.h"
 #include "texturePool.h"
+#include "cMetaInterval.h"
+#include "waitInterval.h"
+#include "showInterval.h"
+#include "cIntervalManager.h"
+#include "cLerpNodePathInterval.h"
 #include "world.h"
 
 // This helps reduce the amount of code used by loading objects, since all of the
@@ -64,7 +71,12 @@ NodePath World::load_object(const string& tex   /* = "" */,
 // on screen instructions
 NodePath World::gen_label_text(const string& text, int i) const
    {
-   return onscreen_text(text, Colorf(1, 1, 0, 1), LPoint2f(-1.3, 0.95-0.05*i), A_left, 0.05);
+   return COnscreenText(m_windowFrameworkPtr,
+                        text,
+                        Colorf(1, 1, 0, 1),
+                        LPoint2f(-1.3, 0.95-0.05*i),
+                        COnscreenText::A_left,
+                        0.05);
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -73,7 +85,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    // preconditions
    if(m_windowFrameworkPtr == NULL)
       {
-      nout << "ERROR: World::World(WindowFramework* windowFrameworkPtr) parameter windowFrameworkPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter windowFrameworkPtr cannot be NULL." << endl;
       return;
       }
 
@@ -81,10 +93,11 @@ World::World(WindowFramework* windowFrameworkPtr)
    srand(time(NULL));
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = onscreen_text("Panda3D: Tutorial - Tasks",
+   m_titleNp = COnscreenText(m_windowFrameworkPtr,
+                             "Panda3D: Tutorial - Tasks",
                              Colorf(1, 1, 0, 1),
                              LPoint2f(0.8, -0.95),
-                             A_center,
+                             COnscreenText::A_center,
                              0.07);
    m_escapeTextNp   = gen_label_text("ESC: Quit", 0);
    m_leftKeyTextNp  = gen_label_text("[Left Arrow]: Turn Left (CCW)", 1);
@@ -383,15 +396,42 @@ AsyncTask::DoneStatus World::game_loop(GenericAsyncTask* taskPtr)
          // Reset the velocity
          set_velocity(m_shipNp, LVecBase3f(0,0,0));
 
-         // Note: Sequence is a python only class
-         //       Replace it with a delayed task
-         PT(GenericAsyncTask) taskPtr = new GenericAsyncTask("restart", call_restart, this);
-         if(taskPtr != NULL)
+         int metaIntervalId = CIntervalManager::get_global_ptr()->find_c_interval("RestartSequence");
+         if(metaIntervalId == -1)
             {
-            // Wait 2 seconds
-            taskPtr->set_delay(2);
-            AsyncTaskManager::get_global_ptr()->add(taskPtr);
+            PT(CMetaInterval) metaIntervalPtr = new CMetaInterval("RestartSequence");
+            if(metaIntervalPtr != NULL)
+               {
+               // Wait 2 seconds
+               metaIntervalPtr->add_c_interval(new WaitInterval(2));
+               // Reset heading
+               // Reset position X
+               // Reset position Y (Z for Panda)
+               PT(CLerpNodePathInterval) cLerpNodePathIntervalPtr = new CLerpNodePathInterval("SetRXZ",
+                                                                                              0,
+                                                                                              CLerpNodePathInterval::BT_no_blend,
+                                                                                              true,
+                                                                                              false,
+                                                                                              m_shipNp,
+                                                                                              NodePath());
+               if(cLerpNodePathIntervalPtr != NULL)
+                  {
+                  cLerpNodePathIntervalPtr->set_end_hpr(LVecBase3f(m_shipNp.get_h(), m_shipNp.get_p(), 0));
+                  cLerpNodePathIntervalPtr->set_end_pos(LVecBase3f(0, m_shipNp.get_y(), 0));
+                  metaIntervalPtr->add_c_interval(cLerpNodePathIntervalPtr);
+                  }
+               // Show the ship
+               metaIntervalPtr->add_c_interval(new ShowInterval(m_shipNp, "ShowShip"));
+               // And respawn the asteroids
+               metaIntervalPtr->add_c_interval(new GenericFunctionInterval("SpawnAsteroids", call_spawn_asteroids, this, true));
+               metaIntervalPtr->start();
+               }
             }
+         else
+            {
+            CIntervalManager::get_global_ptr()->get_c_interval(metaIntervalId)->start();
+            }
+
          return AsyncTask::DS_cont;
          }
       }
@@ -420,7 +460,7 @@ void World::update_pos(NodePath objNp, double dt)
    objNp.set_pos(newPos);
    }
 
-  // The handler when an asteroid is hit by a bullet
+// The handler when an asteroid is hit by a bullet
 void World::asteroid_hit(list<NodePath>::iterator astPtr)
    {
    // If the asteroid is small it is simply removed
@@ -527,29 +567,6 @@ void World::fire(double time)
    m_bullets.push_back(bulletNp);
    }
 
-// Note: OnscreenText is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
-   {
-   NodePath textNodeNp;
-
-   if(m_windowFrameworkPtr != NULL)
-      {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
-      }
-
-   return textNodeNp;
-   }
-
 void World::sys_exit(const Event* eventPtr, void* dataPtr)
    {
    exit(0);
@@ -561,14 +578,12 @@ void World::call_set_key(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: template<int key, bool value> void World::call_set_key(const Event* eventPtr, void* dataPtr) "
-              "parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return;
       }
    if(key < 0 || key >= K_keys)
       {
-      nout << "ERROR: template<int key, bool value> void World::call_set_key(const Event* eventPtr, void* dataPtr) "
-              "parameter key is out of range: " << key << endl;
+      nout << "ERROR: parameter key is out of range: " << key << endl;
       return;
       }
 
@@ -580,38 +595,25 @@ AsyncTask::DoneStatus World::call_game_loop(GenericAsyncTask* taskPtr, void* dat
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: AsyncTask::DoneStatus World::call_game_loop(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return AsyncTask::DS_done;
       }
 
-   World* worldPtr = static_cast<World*>(dataPtr);
-   return worldPtr->game_loop(taskPtr);
+   // Note: here's a good place to step the interval manager
+   CIntervalManager::get_global_ptr()->step();
+
+   return static_cast<World*>(dataPtr)->game_loop(taskPtr);
    }
 
-AsyncTask::DoneStatus World::call_restart(GenericAsyncTask* taskPtr, void* dataPtr)
+void World::call_spawn_asteroids(void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: AsyncTask::DoneStatus World::call_restart(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
-      return AsyncTask::DS_done;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
+      return;
       }
 
-   World* worldPtr = static_cast<World*>(dataPtr);
-   worldPtr->restart();
-   return AsyncTask::DS_done;
-   }
-
-void World::restart()
-   {
-   // Reset heading
-   m_shipNp.set_r(0);
-   // Reset position X
-   m_shipNp.set_x(0);
-   // Reset position Y (Z for Panda)
-   m_shipNp.set_z(0);
-   // Show the ship
-   m_shipNp.show();
-   // And respawn the asteroids
-   spawn_asteroids();
+   static_cast<World*>(dataPtr)->spawn_asteroids();
+   return;
    }
