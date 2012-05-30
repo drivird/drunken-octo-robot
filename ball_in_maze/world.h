@@ -28,19 +28,12 @@ class World
    const LVecBase3f UP; // We need this vector a lot, so its better to just have one
                         // instead of creating a new one every time we need it
 
-   enum Alignment
-      {
-      A_center  = TextNode::A_center,
-      A_left   = TextNode::A_left
-      };
-
    void start();
    void ground_collide_handler(const CollisionEntry& colEntry);
    void wall_collide_handler(const CollisionEntry& colEntry);
    void lose_game(const CollisionEntry& entry);
 
    World(); // to prevent use of the default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    void traverse();
    AsyncTask::DoneStatus roll(GenericAsyncTask *taskPtr);
    static void sys_exit(const Event* eventPtr, void* dataPtr);

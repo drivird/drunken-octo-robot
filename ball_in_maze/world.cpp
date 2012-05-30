@@ -5,6 +5,7 @@
  *      Author: dri
  */
 
+#include "../p3util/cOnscreenText.h"
 #include "pandaFramework.h"
 #include "bitMask.h"
 #include "ambientLight.h"
@@ -24,20 +25,22 @@ World::World(WindowFramework* windowFrameworkPtr)
    // preconditions
    if(m_windowFrameworkPtr == NULL)
       {
-      nout << "ERROR: World::World(WindowFramework* windowFrameworkPtr) parameter windowFrameworkPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter windowFrameworkPtr cannot be NULL." << endl;
       return;
       }
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = onscreen_text("Panda3D: Tutorial - Collision Detection",
+   m_titleNp = COnscreenText(m_windowFrameworkPtr,
+                             "Panda3D: Tutorial - Collision Detection",
                              Colorf(1,1,1,1),
                              LPoint2f(0.7,-0.95),
-                             A_center,
+                             COnscreenText::A_center,
                              0.07);
-   m_instructionsNp = onscreen_text("Mouse pointer tilts the board",
+   m_instructionsNp = COnscreenText(m_windowFrameworkPtr,
+                                    "Mouse pointer tilts the board",
                                     Colorf(1,1,1,1),
                                     LPoint2f(-1.3, 0.95),
-                                    A_left,
+                                    COnscreenText::A_left,
                                     0.05);
 
    // Escape quits
@@ -421,11 +424,15 @@ void World::lose_game(const CollisionEntry& entry)
       return;
       }
 
+   float endPosZ = m_ballRootNp.get_pos().get_z() - 0.9;
    LVecBase3f midEndPos(toPos.get_x(),
                        toPos.get_y(),
-                       0.5*(m_ballRootNp.get_pos().get_z()+toPos.get_z()));
+                       0.5*(m_ballRootNp.get_pos().get_z()+endPosZ));
    lerp1Ptr->set_end_pos(midEndPos);
-   lerp2Ptr->set_end_pos(toPos);
+   LVecBase3f endPos(toPos.get_x(),
+                     toPos.get_y(),
+                     endPosZ);
+   lerp2Ptr->set_end_pos(endPos);
 
    cMetaIntervalPtr->add_c_interval(lerp1Ptr, 0, CMetaInterval::RS_previous_end);
    cMetaIntervalPtr->add_c_interval(lerp2Ptr, 0, CMetaInterval::RS_previous_end);
@@ -446,29 +453,6 @@ void World::lose_game(const CollisionEntry& entry)
       }
    }
 
-// Note: OnscreenText is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
-   {
-   NodePath textNodeNp;
-
-   if(m_windowFrameworkPtr != NULL)
-      {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
-      }
-
-   return textNodeNp;
-   }
-
 void World::sys_exit(const Event* eventPtr, void* dataPtr)
    {
    exit(0);
@@ -479,7 +463,7 @@ AsyncTask::DoneStatus World::call_traverse(GenericAsyncTask *taskPtr, void *data
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: AsyncTask::DoneStatus World::call_traverse(GenericAsyncTask *taskPtr, void *dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return AsyncTask::DS_done;
       }
 
@@ -498,7 +482,7 @@ AsyncTask::DoneStatus World::call_roll(GenericAsyncTask *taskPtr, void *dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: AsyncTask::DoneStatus World::call_roll(GenericAsyncTask *taskPtr, void *dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return AsyncTask::DS_done;
       }
 
@@ -516,7 +500,7 @@ void World::call_start(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void World::call_start(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return;
       }
 
