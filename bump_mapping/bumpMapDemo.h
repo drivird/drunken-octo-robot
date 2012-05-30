@@ -18,12 +18,6 @@ class BumpMapDemo
 
    private:
 
-   enum Alignment
-      {
-      A_left   = TextNode::A_left,
-      A_right  = TextNode::A_right
-      };
-
    enum Button
       {
       B_btn1 = 0,
@@ -47,7 +41,6 @@ class BumpMapDemo
    void control_camera(GenericAsyncTask* taskPtr);
 
    BumpMapDemo(); // to prevent use of the default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int btn, bool value> static void call_set_mouse_btn(const Event* eventPtr, void* dataPtr);
    static void call_toggle_shader(const Event* eventPtr, void* dataPtr);

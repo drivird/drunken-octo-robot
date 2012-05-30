@@ -5,6 +5,7 @@
  *      Author: dri
  */
 
+#include "../p3util/cOnscreenText.h"
 #include "bumpMapDemo.h"
 #include "pandaFramework.h"
 #include "cLerpNodePathInterval.h"
@@ -15,13 +16,22 @@
 // Function to put title on the screen.
 NodePath BumpMapDemo::add_title(const string& text) const
    {
-   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(1.3,-0.95), A_right, 0.07);
+   return COnscreenText(m_windowFrameworkPtr,
+                        text, Colorf(1,1,1,1),
+                        LPoint2f(1.3,-0.95),
+                        COnscreenText::A_right,
+                        0.07);
    }
 
 // Function to put instructions on the screen.
 NodePath BumpMapDemo::add_instructions(float pos, const string& msg) const
    {
-   return onscreen_text(msg, Colorf(1,1,1,1), LPoint2f(-1.3, pos), A_left, 0.05);
+   return COnscreenText(m_windowFrameworkPtr,
+                        msg,
+                        Colorf(1,1,1,1),
+                        LPoint2f(-1.3, pos),
+                        COnscreenText::A_left,
+                        0.05);
    }
 
 BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
@@ -30,7 +40,7 @@ BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)
    // preconditions
    if(m_windowFrameworkPtr == NULL)
       {
-      nout << "ERROR: BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr) parameter windowFrameworkPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter windowFrameworkPtr cannot be NULL." << endl;
       return;
       }
 
@@ -229,29 +239,6 @@ void BumpMapDemo::control_camera(GenericAsyncTask* taskPtr)
    m_last = taskPtr->get_elapsed_time();
    }
 
-// Note: OnscreenText is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath BumpMapDemo::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
-   {
-   NodePath textNodeNp;
-
-   if(m_windowFrameworkPtr != NULL)
-      {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
-      }
-
-   return textNodeNp;
-   }
-
 void BumpMapDemo::sys_exit(const Event* eventPtr, void* dataPtr)
    {
    exit(0);
@@ -263,14 +250,12 @@ void BumpMapDemo::call_set_mouse_btn(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: template<int btn, bool value> void BumpMapDemo::call_set_mouse_btn(const Event* eventPtr, void* dataPtr) "
-              "parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return;
       }
    if(btn < 0 || btn >= B_buttons)
       {
-      nout << "ERROR: template<int btn, bool value> void BumpMapDemo::call_set_mouse_btn(const Event* eventPtr, void* dataPtr) "
-              "parameter btn is out of range: " << btn << endl;
+      nout << "ERROR: parameter btn is out of range: " << btn << endl;
       return;
       }
 
@@ -282,7 +267,7 @@ void BumpMapDemo::call_toggle_shader(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: void BumpMapDemo::toggle_shader(const Event* eventPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return;
       }
 
@@ -296,14 +281,12 @@ void BumpMapDemo::call_rotate_light(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_light(const Event* eventPtr, void* dataPtr) "
-              "parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return;
       }
    if(!(offset == -1 || offset == 1))
       {
-      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_light(const Event* eventPtr, void* dataPtr) "
-              "parameter offset is illegal: " << offset << endl;
+      nout << "ERROR: parameter offset is illegal: " << offset << endl;
       return;
       }
 
@@ -316,14 +299,12 @@ void BumpMapDemo::call_rotate_cam(const Event* eventPtr, void* dataPtr)
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_cam(const Event* eventPtr, void* dataPtr) "
-              "parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return;
       }
    if(!(offset == -1 || offset == 1))
       {
-      nout << "ERROR: template<int offset> void BumpMapDemo::call_rotate_cam(const Event* eventPtr, void* dataPtr) "
-              "parameter offset is illegal: " << offset << endl;
+      nout << "ERROR: parameter offset is illegal: " << offset << endl;
       return;
       }
 
@@ -335,7 +316,7 @@ AsyncTask::DoneStatus BumpMapDemo::call_control_camera(GenericAsyncTask* taskPtr
    // preconditions
    if(dataPtr == NULL)
       {
-      nout << "ERROR: AsyncTask::DoneStatus BumpMapDemo::call_control_camera(GenericAsyncTask* taskPtr, void* dataPtr) parameter dataPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
       return AsyncTask::DS_done;
       }
 

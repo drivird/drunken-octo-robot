@@ -20,7 +20,8 @@ class COnscreenText : public NodePath
    enum Alignment
       {
       A_center = TextNode::A_center,
-      A_left   = TextNode::A_left
+      A_left   = TextNode::A_left,
+      A_right  = TextNode::A_right
       };
 
    COnscreenText(WindowFramework* windowFrameworkPtr,
