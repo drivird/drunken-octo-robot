@@ -74,7 +74,7 @@ class World
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int key, bool value> static void call_set_key(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_game_loop(GenericAsyncTask* taskPtr, void* dataPtr);
-   static void call_spawn_asteroids(void* dataPtr);
+   static void call_spawn_asteroids(const Event* eventPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
    PT(GenericAsyncTask) m_gameTaskPtr;

@@ -6,7 +6,6 @@
  */
 
 #include "../p3util/cOnscreenText.h"
-#include "../p3util/genericFunctionInterval.h"
 #include "pandaFramework.h"
 #include "texturePool.h"
 #include "cMetaInterval.h"
@@ -399,11 +398,11 @@ AsyncTask::DoneStatus World::game_loop(GenericAsyncTask* taskPtr)
          int metaIntervalId = CIntervalManager::get_global_ptr()->find_c_interval("RestartSequence");
          if(metaIntervalId == -1)
             {
-            PT(CMetaInterval) metaIntervalPtr = new CMetaInterval("RestartSequence");
-            if(metaIntervalPtr != NULL)
+            PT(CMetaInterval) cMetaIntervalPtr = new CMetaInterval("RestartSequence");
+            if(cMetaIntervalPtr != NULL)
                {
                // Wait 2 seconds
-               metaIntervalPtr->add_c_interval(new WaitInterval(2));
+               cMetaIntervalPtr->add_c_interval(new WaitInterval(2));
                // Reset heading
                // Reset position X
                // Reset position Y (Z for Panda)
@@ -418,13 +417,15 @@ AsyncTask::DoneStatus World::game_loop(GenericAsyncTask* taskPtr)
                   {
                   cLerpNodePathIntervalPtr->set_end_hpr(LVecBase3f(m_shipNp.get_h(), m_shipNp.get_p(), 0));
                   cLerpNodePathIntervalPtr->set_end_pos(LVecBase3f(0, m_shipNp.get_y(), 0));
-                  metaIntervalPtr->add_c_interval(cLerpNodePathIntervalPtr);
+                  cMetaIntervalPtr->add_c_interval(cLerpNodePathIntervalPtr);
                   }
                // Show the ship
-               metaIntervalPtr->add_c_interval(new ShowInterval(m_shipNp, "ShowShip"));
+               cMetaIntervalPtr->add_c_interval(new ShowInterval(m_shipNp, "ShowShip"));
                // And respawn the asteroids
-               metaIntervalPtr->add_c_interval(new GenericFunctionInterval("SpawnAsteroids", call_spawn_asteroids, this, true));
-               metaIntervalPtr->start();
+               cMetaIntervalPtr->set_done_event("SpawnAsteroids");
+               cMetaIntervalPtr->start();
+
+               EventHandler::get_global_event_handler()->add_hook("SpawnAsteroids", call_spawn_asteroids, this);
                }
             }
          else
@@ -605,7 +606,7 @@ AsyncTask::DoneStatus World::call_game_loop(GenericAsyncTask* taskPtr, void* dat
    return static_cast<World*>(dataPtr)->game_loop(taskPtr);
    }
 
-void World::call_spawn_asteroids(void* dataPtr)
+void World::call_spawn_asteroids(const Event* eventPtr, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
