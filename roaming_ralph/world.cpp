@@ -6,6 +6,7 @@
  */
 
 
+#include "../p3util/cOnscreenText.h"
 #include "pandaFramework.h"
 #include "ambientLight.h"
 #include "directionalLight.h"
@@ -17,13 +18,23 @@ const float SPEED = 0.5; // Note: unused
 // Function to put instructions on the screen.
 NodePath World::add_instructions(float pos, const string& msg) const
    {
-   return onscreen_text(msg, Colorf(1,1,1,1), LPoint2f(-1.3, pos), A_left, 0.05);
+   return COnscreenText(m_windowFrameworkPtr,
+                        msg,
+                        Colorf(1,1,1,1),
+                        LPoint2f(-1.3, pos),
+                        COnscreenText::A_left,
+                        0.05);
    }
 
 // Function to put title on the screen.
 NodePath World::add_title(const string& text) const
    {
-   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(1.3,-0.95), A_right, 0.07);
+   return COnscreenText(m_windowFrameworkPtr,
+                        text,
+                        Colorf(1,1,1,1),
+                        LPoint2f(1.3,-0.95),
+                        COnscreenText::A_right,
+                        0.07);
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -74,13 +85,16 @@ World::World(WindowFramework* windowFrameworkPtr)
 
    // Create the main character, Ralph
    LPoint3f ralphStartPos = m_environNp.find("**/start_point").get_pos();
-   map<string, string> ralphAnims;
+   CActor::AnimMap ralphAnims;
    ralphAnims["run"] = "../models/ralph-run";
    ralphAnims["walk"] = "../models/ralph-walk";
-   m_ralphNp = load_actor(&m_animControlCollection, "../models/ralph", ralphAnims, PartGroup::HMF_ok_wrong_root_name);
-   m_ralphNp.reparent_to(renderNp);
-   m_ralphNp.set_scale(0.2);
-   m_ralphNp.set_pos(ralphStartPos);
+   m_ralph.load_actor(m_windowFrameworkPtr,
+                      "../models/ralph",
+                      &ralphAnims,
+                      PartGroup::HMF_ok_wrong_root_name);
+   m_ralph.reparent_to(renderNp);
+   m_ralph.set_scale(0.2);
+   m_ralph.set_pos(ralphStartPos);
 
    // Create a floater object.  We use the "floater" as a temporary
    // variable in a variety of calculations.
@@ -115,7 +129,7 @@ World::World(WindowFramework* windowFrameworkPtr)
 
    // Note: no need to disable the mouse in C++
    NodePath cameraNp = m_windowFrameworkPtr->get_camera_group();
-   cameraNp.set_pos(m_ralphNp.get_x(), m_ralphNp.get_y()+10, 2);
+   cameraNp.set_pos(m_ralph.get_x(), m_ralph.get_y()+10, 2);
 
    // We will detect the height of the terrain by creating a collision
    // ray and casting it downward toward the terrain.  One ray will
@@ -136,7 +150,7 @@ World::World(WindowFramework* windowFrameworkPtr)
          m_ralphGroundColPtr->add_solid(m_ralphGroundRayPtr);
          m_ralphGroundColPtr->set_from_collide_mask(BitMask32::bit(0));
          m_ralphGroundColPtr->set_into_collide_mask(BitMask32::all_off());
-         ralphGroundColNp = m_ralphNp.attach_new_node(m_ralphGroundColPtr);
+         ralphGroundColNp = m_ralph.attach_new_node(m_ralphGroundColPtr);
          m_ralphGroundHandlerPtr = new CollisionHandlerQueue();
          if(m_ralphGroundHandlerPtr != NULL)
             {
@@ -210,7 +224,7 @@ void World::move()
    // If the camera-right key is pressed, move camera right.
 
    NodePath cameraNp = m_windowFrameworkPtr->get_camera_group();
-   cameraNp.look_at(m_ralphNp);
+   cameraNp.look_at(m_ralph);
    if(m_keyMap[K_cam_left] != false)
       {
       cameraNp.set_x(cameraNp, -20 * ClockObject::get_global_clock()->get_dt());
@@ -223,21 +237,21 @@ void World::move()
    // save ralph's initial position so that we can restore it,
    // in case he falls off the map or runs into something.
 
-   LPoint3f startPos = m_ralphNp.get_pos();
+   LPoint3f startPos = m_ralph.get_pos();
 
    // If a move-key is pressed, move ralph in the specified direction.
 
    if(m_keyMap[K_left])
       {
-      m_ralphNp.set_h(m_ralphNp.get_h() + 300 * ClockObject::get_global_clock()->get_dt());
+      m_ralph.set_h(m_ralph.get_h() + 300 * ClockObject::get_global_clock()->get_dt());
       }
    if(m_keyMap[K_right])
       {
-      m_ralphNp.set_h(m_ralphNp.get_h() - 300 * ClockObject::get_global_clock()->get_dt());
+      m_ralph.set_h(m_ralph.get_h() - 300 * ClockObject::get_global_clock()->get_dt());
       }
    if(m_keyMap[K_forward])
       {
-      m_ralphNp.set_y(m_ralphNp, -25 * ClockObject::get_global_clock()->get_dt());
+      m_ralph.set_y(m_ralph, -25 * ClockObject::get_global_clock()->get_dt());
       }
 
    // If ralph is moving, loop the run animation.
@@ -247,7 +261,7 @@ void World::move()
       {
        if(!m_isMoving)
           {
-          m_animControlCollection.loop("run", true);
+          m_ralph.loop("run", true);
           m_isMoving = true;
           }
       }
@@ -255,8 +269,8 @@ void World::move()
       {
       if(m_isMoving)
          {
-         m_animControlCollection.stop("run");
-         m_animControlCollection.pose("walk", 5);
+         m_ralph.stop("run");
+         m_ralph.pose("walk", 5);
          m_isMoving = false;
          }
       }
@@ -264,7 +278,7 @@ void World::move()
    // If the camera is too far from ralph, move it closer.
    // If the camera is too close to ralph, move it farther.
 
-   LPoint3f camVec = m_ralphNp.get_pos() - cameraNp.get_pos();
+   LPoint3f camVec = m_ralph.get_pos() - cameraNp.get_pos();
    camVec.set_z(0);
    float camDist = camVec.length();
    camVec.normalize();
@@ -292,11 +306,11 @@ void World::move()
    if(m_ralphGroundHandlerPtr->get_num_entries() > 0 &&
       m_ralphGroundHandlerPtr->get_entry(0)->get_into_node()->get_name() == "terrain")
       {
-      m_ralphNp.set_z(m_ralphGroundHandlerPtr->get_entry(0)->get_surface_point(renderNp).get_z());
+      m_ralph.set_z(m_ralphGroundHandlerPtr->get_entry(0)->get_surface_point(renderNp).get_z());
       }
    else
       {
-      m_ralphNp.set_pos(startPos);
+      m_ralph.set_pos(startPos);
       }
 
    // Keep the camera at one foot above the terrain,
@@ -308,101 +322,18 @@ void World::move()
       {
       cameraNp.set_z(m_camGroundHandlerPtr->get_entry(0)->get_surface_point(renderNp).get_z()+1.0);
       }
-   if(cameraNp.get_z() < m_ralphNp.get_z() + 2.0)
+   if(cameraNp.get_z() < m_ralph.get_z() + 2.0)
       {
-      cameraNp.set_z(m_ralphNp.get_z() + 2.0);
+      cameraNp.set_z(m_ralph.get_z() + 2.0);
       }
 
    // The camera should look in ralph's direction,
    // but it should also try to stay horizontal, so look at
    // a floater which hovers above ralph's head.
 
-   m_floaterNp.set_pos(m_ralphNp.get_pos());
-   m_floaterNp.set_z(m_ralphNp.get_z() + 2.0);
+   m_floaterNp.set_pos(m_ralph.get_pos());
+   m_floaterNp.set_z(m_ralph.get_z() + 2.0);
    cameraNp.look_at(m_floaterNp);
-   }
-
-// Note: OnscreenText is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
-   {
-   NodePath textNodeNp;
-
-   if(m_windowFrameworkPtr != NULL)
-      {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
-      }
-
-   return textNodeNp;
-   }
-
-// Note: this function emulates bits of functionality from the ptyhon class Actor used in the original tutorial.
-//       It loads an actor model and its animations, letting the user specify the name of each animation.
-//       return value       : the actor, parented to the framework's models node (to render the actor, reparent it to the render node)
-//       controlsPtr        : the collection of controls returned, much like auto_bind() would do.
-//       actorFilename      : the actor's egg file
-//       animMap            : a map of the desired name (first) of each animation and its associated file (second).
-//       hierarchyMatchFlags: idem as the same parameter from auto_bind().
-NodePath World::load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
-   {
-   NodePath actorNp;
-
-   // precondition
-   if(controlsPtr == NULL)
-      {
-      nout << "ERROR: parameter controlsPtr cannot be NULL." << endl;
-      return actorNp;
-      }
-
-   // first load the actor model
-   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
-   actorNp = m_windowFrameworkPtr->load_model(modelsNp, actorFilename);
-
-   AnimControlCollection tempCollection;
-   vector<NodePath> animsNp;
-   animsNp.reserve(animMap.size());
-
-   // then for each animations specified by the user
-   for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
-      {
-      // load the animation as a child of the actor
-      NodePath animNp = m_windowFrameworkPtr->load_model(actorNp, i->second);
-      // collect the animation in a temporary collection
-      auto_bind(actorNp.node(), tempCollection, hierarchyMatchFlags);
-      // we should have collected a single animation
-      if(tempCollection.get_num_anims() == 1)
-         {
-         // store the animation in the user's collection
-         controlsPtr->store_anim(tempCollection.get_anim(0), i->first);
-         // detach the node so that it will not appear in a new call to auto_bind()
-         animNp.detach_node();
-         // keep it on the side
-         animsNp.push_back(animNp);
-         }
-      else
-         {
-         // something is wrong
-         nout << "WARNING: could not bind animation `" << i->first << "' from file `" << i->second << "'." << endl;
-         }
-      tempCollection.clear_anims();
-      }
-
-   // re-attach the animation nodes to the actor
-   for(vector<NodePath>::iterator np = animsNp.begin(); np < animsNp.end(); ++np)
-      {
-      np->reparent_to(actorNp);
-      }
-
-   return actorNp;
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)

@@ -8,6 +8,7 @@
 #ifndef WORLD_H_
 #define WORLD_H_
 
+#include "../p3util/cActor.h"
 #include "collisionTraverser.h"
 #include "collisionRay.h"
 #include "collisionHandlerQueue.h"
@@ -19,12 +20,6 @@ class World
    World(WindowFramework* windowFrameworkPtr);
 
    private:
-
-   enum Alignment
-      {
-      A_left   = TextNode::A_left,
-      A_right  = TextNode::A_right
-      };
 
    enum Key
       {
@@ -42,14 +37,13 @@ class World
    void move();
 
    World(); // to prevent use of the default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
-   NodePath load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int key, bool value> static void call_set_key(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_move(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
    vector<bool> m_keyMap;
+   CActor m_ralph;
    NodePath m_titleNp;
    NodePath m_inst1Np;
    NodePath m_inst2Np;
@@ -58,10 +52,8 @@ class World
    NodePath m_inst6Np;
    NodePath m_inst7Np;
    NodePath m_environNp;
-   NodePath m_ralphNp;
    NodePath m_floaterNp;
    bool m_isMoving;
-   AnimControlCollection m_animControlCollection;
    CollisionTraverser m_collisionTraverser;
    PT(CollisionRay) m_ralphGroundRayPtr;
    PT(CollisionRay) m_camGroundRayPtr;
