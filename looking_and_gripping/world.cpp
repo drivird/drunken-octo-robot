@@ -9,6 +9,7 @@
  *
  */
 
+#include "../p3util/cOnscreenText.h"
 #include "world.h"
 #include "pandaFramework.h"
 #include "auto_bind.h"
@@ -28,7 +29,12 @@ float World::restrain(float i, float mn /*= -1*/, float mx /*= 1*/)
 // on screen instructions
 NodePath World::gen_label_text(const string& text, int i) const
    {
-   return onscreen_text(text, Colorf(1,1,1,1), LPoint2f(-1.3, 0.95-0.06*i), A_left, 0.05);
+   return COnscreenText(m_windowFrameworkPtr,
+                        text,
+                        Colorf(1,1,1,1),
+                        LPoint2f(-1.3, 0.95-0.06*i),
+                        COnscreenText::A_left,
+                        0.05);
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -37,12 +43,17 @@ World::World(WindowFramework* windowFrameworkPtr)
    // preconditions
    if(m_windowFrameworkPtr == NULL)
       {
-      nout << "ERROR: World::World(WindowFramework* windowFrameworkPtr) parameter windowFrameworkPtr cannot be NULL." << endl;
+      nout << "ERROR: parameter windowFrameworkPtr cannot be NULL." << endl;
       return;
       }
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = onscreen_text("Panda3D: Tutorial - Joint Manipulation", Colorf(1,1,1,1), LPoint2f(0.7, -0.95), A_center, 0.07);
+   m_titleNp = COnscreenText(m_windowFrameworkPtr,
+                             "Panda3D: Tutorial - Joint Manipulation",
+                             Colorf(1,1,1,1),
+                             LPoint2f(0.7, -0.95),
+                             COnscreenText::A_center,
+                             0.07);
    m_esckeyTextNp   = gen_label_text("ESC: Quit"      , 0);
    m_onekeyTextNp   = gen_label_text("[1]: Teapot"    , 1);
    m_twokeyTextNp   = gen_label_text("[2]: Candy cane", 2);
@@ -71,49 +82,25 @@ World::World(WindowFramework* windowFrameworkPtr)
    //       auto_bind() or WindowFramework::loop_animations(). Or you can use
    //       PartGroup::HMF_ok_wrong_root_name to ask auto_bind() to be more
    //       forgiving.
-   map<string, string> eveAnims;
+   CActor::AnimMap eveAnims;
    eveAnims["walk"] = "../models/eve_walk";
-   m_eveNp = load_actor(&m_animControlCollection, "../models/eve", eveAnims, PartGroup::HMF_ok_wrong_root_name);
+   m_eve.load_actor(m_windowFrameworkPtr,
+                    "../models/eve",
+                    &eveAnims,
+                    PartGroup::HMF_ok_wrong_root_name);
 
    // Put it in the scene
    NodePath renderNp = m_windowFrameworkPtr->get_render();
-   m_eveNp.reparent_to(renderNp);
+   m_eve.reparent_to(renderNp);
 
    // Now we use control_joint to get a NodePath that's in control of her neck
    // This must be done before any animations are played
-   bool foundJoint = false;
-   PT(CharacterJoint) characterJointPtr = NULL;
-   string jointName("Neck");
-   m_eveNeckNp = m_eveNp.attach_new_node(jointName);
-   NodePath characterNP = m_eveNp.find("**/+Character");
-   PT(Character) characterPtr = DCAST(Character, characterNP.node());
-   if(characterPtr != NULL)
-      {
-      characterJointPtr = characterPtr->find_joint(jointName);
-      if(characterJointPtr != NULL)
-         {
-         for(int i = 0; !foundJoint && i < characterPtr->get_num_bundles(); ++i)
-            {
-            if(characterPtr->get_bundle(i)->control_joint(jointName, m_eveNeckNp.node()))
-               {
-               foundJoint = true;
-               m_eveNeckNp.set_mat(characterJointPtr->get_default_value());
-               }
-            }
-         }
-      }
-   if(!foundJoint)
-      {
-      nout << "ERROR: cannot control joint `" << jointName << "'." << endl;
-      m_eveNeckNp.remove_node();
-      }
+   m_eveNeckNp = m_eve.control_joint("Neck");
 
    // We now play an animation. An animation must be played, or at least posed
    // for the nodepath we just got from control_joint to actually effect the model
-   // Note: the AnimControl's name is the one from the <Bundle> tag in the egg file,
-   //       in this case `Eve'.
-   m_animControlCollection.get_anim(0)->set_play_rate(2);
-   m_animControlCollection.loop("walk", true);
+   m_eve.find_anim("walk")->set_play_rate(2);
+   m_eve.loop("walk", true);
 
    // Now we add a task that will take care of turning the head
    PT(GenericAsyncTask) turnHeadTask = new GenericAsyncTask("turnHead", call_turn_head, this);
@@ -127,24 +114,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    // control_joint which stops that joint from animating but lets us move it.
    // This is particularly useful for putting an object (like a weapon) in an
    // actor's hand
-   // Note: ExposeJoint is a python only function.
-   foundJoint = false;
-   jointName = "RightHand";
-   m_eveRightHandNp = m_eveNp.attach_new_node(jointName);
-   if(characterPtr != NULL)
-      {
-      characterJointPtr = characterPtr->find_joint(jointName);
-      if(characterJointPtr != NULL)
-         {
-         foundJoint = true;
-         characterJointPtr->add_net_transform(m_eveRightHandNp.node());
-         }
-      }
-   if(!foundJoint)
-      {
-      nout << "ERROR: no joint named `" << jointName << "'." << endl;
-      m_eveRightHandNp.remove_node();
-      }
+   m_eveRightHandNp = m_eve.expose_joint("RightHand");
 
    // This is a table with models, positions, rotations, and scales of objects to
    // be attached to our exposed joint. These are stock models and so they needed
@@ -187,7 +157,7 @@ void World::set_object(Model i)
    // preconditions
    if(i < 0 || (unsigned int)i >= m_modelsNp.size())
       {
-      nout << "ERROR: void World::set_object(int i) parameter i is out of range (i=" << i << ")" << endl;
+      nout << "ERROR: parameter i is out of range (i=" << i << ")" << endl;
       return;
       }
 
@@ -235,89 +205,6 @@ void World::setup_lights() const
    NodePath renderNp = m_windowFrameworkPtr->get_render();
    renderNp.set_light(renderNp.attach_new_node(directionalLightPtr));
    renderNp.set_light(renderNp.attach_new_node(ambientLightPtr));
-   }
-
-// Note: OnscreenText is a python only function. It's capabilities are emulated here
-//       to simplify the translation to C++.
-NodePath World::onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const
-   {
-   NodePath textNodeNp;
-
-   if(m_windowFrameworkPtr != NULL)
-      {
-      PT(TextNode) textNodePtr = new TextNode("OnscreenText");
-      if(textNodePtr != NULL)
-         {
-         textNodePtr->set_text(text);
-         textNodePtr->set_text_color(fg);
-         textNodePtr->set_align(static_cast<TextNode::Alignment>(align));
-         textNodeNp = m_windowFrameworkPtr->get_aspect_2d().attach_new_node(textNodePtr);
-         textNodeNp.set_pos(pos.get_x(), 0, pos.get_y());
-         textNodeNp.set_scale(scale);
-         }
-      }
-
-   return textNodeNp;
-   }
-
-// Note: this function emulates bits of functionality from the ptyhon class Actor used in the original tutorial.
-//       It loads an actor model and its animations, letting the user specify the name of each animation.
-//       return value       : the actor, parented to the framework's models node (to render the actor, reparent it to the render node)
-//       controlsPtr        : the collection of controls returned, much like auto_bind() would do.
-//       actorFilename      : the actor's egg file
-//       animMap            : a map of the desired name (first) of each animation and its associated file (second).
-//       hierarchyMatchFlags: idem as the same parameter from auto_bind().
-NodePath World::load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags /*= 0*/)
-   {
-   NodePath actorNp;
-
-   // precondition
-   if(controlsPtr == NULL)
-      {
-      nout << "ERROR: parameter controlsPtr cannot be NULL." << endl;
-      return actorNp;
-      }
-
-   // first load the actor model
-   NodePath modelsNp = m_windowFrameworkPtr->get_panda_framework()->get_models();
-   actorNp = m_windowFrameworkPtr->load_model(modelsNp, actorFilename);
-
-   AnimControlCollection tempCollection;
-   vector<NodePath> animsNp;
-   animsNp.reserve(animMap.size());
-
-   // then for each animations specified by the user
-   for(map<string,string>::const_iterator i = animMap.begin(); i != animMap.end(); i++)
-      {
-      // load the animation as a child of the actor
-      NodePath animNp = m_windowFrameworkPtr->load_model(actorNp, i->second);
-      // collect the animation in a temporary collection
-      auto_bind(actorNp.node(), tempCollection, hierarchyMatchFlags);
-      // we should have collected a single animation
-      if(tempCollection.get_num_anims() == 1)
-         {
-         // store the animation in the user's collection
-         controlsPtr->store_anim(tempCollection.get_anim(0), i->first);
-         // detach the node so that it will not appear in a new call to auto_bind()
-         animNp.detach_node();
-         // keep it on the side
-         animsNp.push_back(animNp);
-         }
-      else
-         {
-         // something is wrong
-         nout << "WARNING: could not bind animation `" << i->first << "' from file `" << i->second << "'." << endl;
-         }
-      tempCollection.clear_anims();
-      }
-
-   // re-attach the animation nodes to the actor
-   for(vector<NodePath>::iterator np = animsNp.begin(); np < animsNp.end(); ++np)
-      {
-      np->reparent_to(actorNp);
-      }
-
-   return actorNp;
    }
 
 void World::sys_exit(const Event* eventPtr, void* dataPtr)

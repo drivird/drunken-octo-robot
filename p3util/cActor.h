@@ -22,10 +22,12 @@ class CActor : public NodePath, public AnimControlCollection
    CActor();
    virtual ~CActor();
 
-   virtual void load_actor(WindowFramework* windowFrameworkPtr,
-                           const string& actorFilename,
-                           const AnimMap* animMapPtr,
-                           int hierarchyMatchFlags);
+   void load_actor(WindowFramework* windowFrameworkPtr,
+                   const string& actorFilename,
+                   const AnimMap* animMapPtr,
+                   int hierarchyMatchFlags);
+   NodePath control_joint(const string& jointName);
+   NodePath expose_joint(const string& jointName);
 
    private:
 

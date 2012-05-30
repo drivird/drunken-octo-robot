@@ -12,7 +12,8 @@
 #ifndef WORLD_H_
 #define WORLD_H_
 
-#include "windowFramework.h"
+#include "pandaFramework.h"
+#include "../p3util/cActor.h"
 
 class World
    {
@@ -21,12 +22,6 @@ class World
    World(WindowFramework* windowFrameworkPtr);
 
    private:
-
-   enum Alignment
-      {
-      A_center = TextNode::A_center,
-      A_left   = TextNode::A_left
-      };
 
    enum Model
       {
@@ -54,21 +49,18 @@ class World
    void setup_lights() const;
 
    World(); // to prevent use of default constructor
-   NodePath onscreen_text(const string& text, const Colorf& fg, const LPoint2f& pos, Alignment align, float scale) const;
-   NodePath load_actor(AnimControlCollection* controlsPtr, const string& actorFilename, const map<string,string>& animMap, int hierarchyMatchFlags = 0);
    static void sys_exit(const Event* eventPtr, void* dataPtr);
    template<int i> static void call_set_object(const Event* eventPtr, void* dataPtr);
    static AsyncTask::DoneStatus call_turn_head(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
-   AnimControlCollection m_animControlCollection;
+   CActor m_eve;
    NodePath m_titleNp;
    NodePath m_esckeyTextNp;
    NodePath m_onekeyTextNp;
    NodePath m_twokeyTextNp;
    NodePath m_threekeyTextNp;
    NodePath m_fourkeyTextNp;
-   NodePath m_eveNp;
    NodePath m_eveNeckNp;
    NodePath m_eveRightHandNp;
    vector<NodePath> m_modelsNp;

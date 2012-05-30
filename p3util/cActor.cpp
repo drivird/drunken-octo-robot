@@ -6,6 +6,7 @@
  */
 
 #include "auto_bind.h"
+#include "character.h"
 #include "cActor.h"
 
 CActor::CActor()
@@ -88,4 +89,72 @@ void CActor::load_actor(WindowFramework* windowFrameworkPtr,
       {
       (*np).reparent_to(*this);
       }
+   }
+
+// This function gives access to a joint that can be controlled via its NodePath handle.
+// Think of it as a write to that joint interface.
+//
+// Return value:
+// The joint's NodePath, parented to the actor.
+//
+// Parameter:
+//    jointName: the joint's name as found in the model file.
+NodePath CActor::control_joint(const string& jointName)
+   {
+   bool foundJoint = false;
+   NodePath jointNp = attach_new_node(jointName);
+   NodePath characterNP = find("**/+Character");
+   PT(Character) characterPtr = DCAST(Character, characterNP.node());
+   if(characterPtr != NULL)
+      {
+      PT(CharacterJoint) characterJointPtr = characterPtr->find_joint(jointName);
+      if(characterJointPtr != NULL)
+         {
+         for(int i = 0; !foundJoint && i < characterPtr->get_num_bundles(); ++i)
+            {
+            if(characterPtr->get_bundle(i)->control_joint(jointName, jointNp.node()))
+               {
+               foundJoint = true;
+               jointNp.set_mat(characterJointPtr->get_default_value());
+               }
+            }
+         }
+      }
+   if(!foundJoint)
+      {
+      nout << "ERROR: cannot control joint `" << jointName << "'." << endl;
+      jointNp.remove_node();
+      }
+   return jointNp;
+   }
+
+// This function exposes a joint via its NodePath handle.
+// Think of it as a read from that joint interface.
+//
+// Return value:
+// The joint's NodePath, parented to the actor.
+//
+// Parameter:
+//    jointName: the joint's name as found in the model file.
+NodePath CActor::expose_joint(const string& jointName)
+   {
+   bool foundJoint = false;
+   NodePath jointNp = attach_new_node(jointName);
+   NodePath characterNP = find("**/+Character");
+   PT(Character) characterPtr = DCAST(Character, characterNP.node());
+   if(characterPtr != NULL)
+      {
+      PT(CharacterJoint) characterJointPtr = characterPtr->find_joint(jointName);
+      if(characterJointPtr != NULL)
+         {
+         foundJoint = true;
+         characterJointPtr->add_net_transform(jointNp.node());
+         }
+      }
+   if(!foundJoint)
+      {
+      nout << "ERROR: no joint named `" << jointName << "'." << endl;
+      jointNp.remove_node();
+      }
+   return jointNp;
    }
