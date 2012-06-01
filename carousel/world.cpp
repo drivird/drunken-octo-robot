@@ -17,8 +17,8 @@
 
 World::World(WindowFramework* windowFrameworkPtr)
    : m_windowFrameworkPtr(windowFrameworkPtr),
-     m_pandasNp(4),
-     m_modelsNp(4)
+     m_pandasNp(P_pandas),
+     m_modelsNp(P_pandas)
    {
    // preconditions
    if(m_windowFrameworkPtr == NULL)
@@ -82,7 +82,7 @@ void World::load_models()
    // the carousel.
    // This uses a python concept called "Array Comprehensions." Check the Python
    // manual for more information on how they work
-   for(int i = 0; i < 4; ++i)
+   for(int i = 0; i < P_pandas; ++i)
       {
       string nodeName("panda");
       nodeName += i;
@@ -172,12 +172,29 @@ void World::start_carousel()
    // (which we will create below), which changes the height of the panda based
    // on the sin of the value passed in. In this way we achieve non-linear
    // motion by linearly changing the input to a function
+   m_lerpFuncPtrVec.resize(P_pandas);
+   m_lerpFuncPtrVec[P_panda1] = oscillate_panda<P_panda1>;
+   m_lerpFuncPtrVec[P_panda2] = oscillate_panda<P_panda2>;
+   m_lerpFuncPtrVec[P_panda3] = oscillate_panda<P_panda3>;
+   m_lerpFuncPtrVec[P_panda4] = oscillate_panda<P_panda4>;
 
-   // Note: LerpFunc is a python only function. In C++, we can replicate this
-   //       behaviour very easily using a task.
-   AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("oscillatePandaTask",
-                                                                call_oscillate_pandas,
-                                                                this));
+   m_moveIntervalPtrVec.resize(P_pandas);
+   for(int i = 0; i < P_pandas; ++i)
+      {
+      string intervalName("moveInterval");
+      intervalName += i;
+      m_moveIntervalPtrVec[i] = new CLerpFunctionInterval(intervalName,
+                                                          m_lerpFuncPtrVec[i],
+                                                          this,
+                                                          3,
+                                                          0,
+                                                          2*PI,
+                                                          CLerpFunctionInterval::BT_no_blend);
+      if(m_moveIntervalPtrVec[i] != NULL)
+         {
+         m_moveIntervalPtrVec[i]->loop();
+         }
+      }
 
    // Finally, we combine Sequence, Parallel, Func, and Wait intervals,
    // to schedule texture swapping on the lights to simulate the lights turning
@@ -227,44 +244,25 @@ void World::start_carousel()
       // Loop this sequence continuously
       m_lightBlinkIntervalPtr->loop();
       }
+
+   // Note: setup a task to step the interval manager
+   AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("intervalManagerTask",
+                                                                step_interval_manager,
+                                                                this));
    }
 
-void World::oscillate_panda(double rad, NodePath pandaNp, double offset)
-   {
-   // This is the oscillation function mentioned earlier. It takes in a degree
-   // value, a NodePath to set the height on, and an offset. The offset is there
-   // so that the different pandas can move opposite to each other.
-   // The .2 is the amplitude, so the height of the panda will vary from -.2 to
-   // .2
-   float f = sin(rad + offset) * 0.2;
-   pandaNp.set_z(f);
-   }
-
-AsyncTask::DoneStatus World::call_oscillate_pandas(GenericAsyncTask* taskPtr, void* dataPtr)
+template<int pandaId>
+void World::oscillate_panda(const double& rad, void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
       {
       nout << "ERROR: parameter dataPtr cannot be NULL." << endl;
-      return AsyncTask::DS_done;
+      return;
       }
 
-   // Note: here's a good place to step the interval manager
-   CIntervalManager::get_global_ptr()->step();
-
-   static_cast<World*>(dataPtr)->oscillate_pandas(taskPtr->get_elapsed_time());
-
-   return AsyncTask::DS_cont;
-   }
-
-void World::oscillate_pandas(double dt)
-   {
-   double rad = 2*PI*dt/3;
-   for(int i = 0; i < 4; ++i)
-      {
-      double offset = PI*(i%2);
-      oscillate_panda(rad, m_modelsNp[i], offset);
-      }
+   double offset = PI*(pandaId%2);
+   static_cast<World*>(dataPtr)->m_modelsNp[pandaId].set_z(sin(rad + offset) * 0.2);
    }
 
 template<int lightId, int blinkId>
@@ -308,4 +306,10 @@ void World::blink_lights(LightId lightId, BlinkId blinkId)
          nout << "ERROR: forgot a BlinkId?" << endl;
          return;
       }
+   }
+
+AsyncTask::DoneStatus World::step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr)
+   {
+   CIntervalManager::get_global_ptr()->step();
+   return AsyncTask::DS_cont;
    }

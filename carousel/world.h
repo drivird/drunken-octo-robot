@@ -8,6 +8,7 @@
 #ifndef WORLD_H_
 #define WORLD_H_
 
+#include "../p3util/cLerpFunctionInterval.h"
 #include "cLerpNodePathInterval.h"
 #include "cMetaInterval.h"
 
@@ -33,22 +34,32 @@ class World
       B_blink_off
       };
 
+   enum PandaId
+      {
+      P_panda1,
+      P_panda2,
+      P_panda3,
+      P_panda4,
+      P_pandas
+      };
+
    void load_models();
    void setup_lights();
    void start_carousel();
-   static void oscillate_panda(double rad, NodePath pandaNp, double offset);
+   template<int pandaId> static void oscillate_panda(const double& rad, void* dataPtr);
 
    World(); // to prevent use of the default constructor
-   static AsyncTask::DoneStatus call_oscillate_pandas(GenericAsyncTask* taskPtr, void* dataPtr);
-   void oscillate_pandas(double dt);
    template<int lightId, int blinkId> static void call_blink_lights(void* dataPtr);
    void blink_lights(LightId lightId, BlinkId blinkId);
+   static AsyncTask::DoneStatus step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr);
 
    PT(WindowFramework) m_windowFrameworkPtr;
    PT(Texture) m_lightOffTexPtr;
    PT(Texture) m_lightOnTexPtr;
    PT(CLerpNodePathInterval) m_carouselSpinIntervalPtr;
    PT(CMetaInterval) m_lightBlinkIntervalPtr;
+   vector<PT(CLerpFunctionInterval)> m_moveIntervalPtrVec;
+   vector<CLerpFunctionInterval::LerpFunc*> m_lerpFuncPtrVec;
    NodePath m_titleNp;
    NodePath m_carouselNp;
    NodePath m_lights1Np;
