@@ -20,6 +20,8 @@ class World
 
    private:
 
+   typedef CLerpFunctionInterval<double> DoubleLerpFunctionInterval;
+
    static const double PI = 3.14159265;
 
    enum LightId
@@ -58,8 +60,8 @@ class World
    PT(Texture) m_lightOnTexPtr;
    PT(CLerpNodePathInterval) m_carouselSpinIntervalPtr;
    PT(CMetaInterval) m_lightBlinkIntervalPtr;
-   vector<PT(CLerpFunctionInterval)> m_moveIntervalPtrVec;
-   vector<CLerpFunctionInterval::LerpFunc*> m_lerpFuncPtrVec;
+   vector<PT(DoubleLerpFunctionInterval)> m_moveIntervalPtrVec;
+   vector<DoubleLerpFunctionInterval::LerpFunc*> m_lerpFuncPtrVec;
    NodePath m_titleNp;
    NodePath m_carouselNp;
    NodePath m_lights1Np;

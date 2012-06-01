@@ -183,13 +183,13 @@ void World::start_carousel()
       {
       string intervalName("moveInterval");
       intervalName += i;
-      m_moveIntervalPtrVec[i] = new CLerpFunctionInterval(intervalName,
-                                                          m_lerpFuncPtrVec[i],
-                                                          this,
-                                                          3,
-                                                          0,
-                                                          2*PI,
-                                                          CLerpFunctionInterval::BT_no_blend);
+      m_moveIntervalPtrVec[i] = new DoubleLerpFunctionInterval(intervalName,
+                                                               m_lerpFuncPtrVec[i],
+                                                               this,
+                                                               3,
+                                                               0,
+                                                               2*PI,
+                                                               DoubleLerpFunctionInterval::BT_no_blend);
       if(m_moveIntervalPtrVec[i] != NULL)
          {
          m_moveIntervalPtrVec[i]->loop();
