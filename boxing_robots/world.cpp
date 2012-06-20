@@ -18,12 +18,14 @@
 // on screen instructions
 NodePath World::gen_label_text(const string& text, int i) const
    {
-   return COnscreenText(m_windowFrameworkPtr,
-                        text,
-                        Colorf(1,1,1,1),
-                        LPoint2f(-1.3, 0.95-0.05*i),
-                        COnscreenText::A_left,
-                        0.05);
+   COnscreenText label("label");
+   label.set_text(text);
+   label.set_pos(LVecBase2f(-1.3, 0.95-0.05*i));
+   label.set_fg(Colorf(1,1,1,1));
+   label.set_align(TextNode::A_left);
+   label.set_scale(0.05);
+   label.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return label.generate();
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -37,12 +39,13 @@ World::World(WindowFramework* windowFrameworkPtr)
       }
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = COnscreenText(m_windowFrameworkPtr,
-                             "Panda3D: Tutorial - Actors",
-                             Colorf(0,0,0,1),
-                             LPoint2f(0.8,-0.95),
-                             COnscreenText::A_center,
-                             0.07);
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text("Panda3D: Tutorial - Actors");
+   title.set_fg(Colorf(0,0,0,1));
+   title.set_pos(LVecBase2f(0.8,-0.95));
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   m_titleNp = title.generate();
    m_escapeEventTextNp = gen_label_text("ESC: Quit", 0);
    m_aKeyEventTextNp = gen_label_text("[A]: Robot 1 Left Punch" , 1);
    m_sKeyEventTextNp = gen_label_text("[S]: Robot 1 Right Punch", 2);
@@ -72,10 +75,10 @@ World::World(WindowFramework* windowFrameworkPtr)
    // and a dictionary (A fancy python structure that is like a lookup table)
    // that contains names for animations, and paths to the appropriate files
    CActor::AnimMap robotAnims;
-   robotAnims["leftPunch" ] = "../models/robot_left_punch";
-   robotAnims["rightPunch"] = "../models/robot_right_punch";
-   robotAnims["headUp"    ] = "../models/robot_head_up";
-   robotAnims["headDown"  ] = "../models/robot_head_down";
+   robotAnims["../models/robot_left_punch" ].push_back("leftPunch" );
+   robotAnims["../models/robot_right_punch"].push_back("rightPunch");
+   robotAnims["../models/robot_head_up"    ].push_back("headUp"    );
+   robotAnims["../models/robot_head_down"  ].push_back("headDown"  );
    m_robot1.load_actor(m_windowFrameworkPtr,
                        "../models/robot",
                        &robotAnims,

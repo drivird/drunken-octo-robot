@@ -70,12 +70,14 @@ NodePath World::load_object(const string& tex   /* = "" */,
 // on screen instructions
 NodePath World::gen_label_text(const string& text, int i) const
    {
-   return COnscreenText(m_windowFrameworkPtr,
-                        text,
-                        Colorf(1, 1, 0, 1),
-                        LPoint2f(-1.3, 0.95-0.05*i),
-                        COnscreenText::A_left,
-                        0.05);
+   COnscreenText label("label");
+   label.set_text(text);
+   label.set_pos(LVecBase2f(-1.3, 0.95-0.05*i));
+   label.set_fg(Colorf(1, 1, 0, 1));
+   label.set_align(TextNode::A_left);
+   label.set_scale(0.05);
+   label.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return label.generate();
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -92,12 +94,14 @@ World::World(WindowFramework* windowFrameworkPtr)
    srand(time(NULL));
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = COnscreenText(m_windowFrameworkPtr,
-                             "Panda3D: Tutorial - Tasks",
-                             Colorf(1, 1, 0, 1),
-                             LPoint2f(0.8, -0.95),
-                             COnscreenText::A_center,
-                             0.07);
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text("Panda3D: Tutorial - Tasks");
+   title.set_fg(Colorf(1, 1, 0, 1));
+   title.set_pos(LVecBase2f(0.8, -0.95));
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   m_titleNp = title.generate();
+
    m_escapeTextNp   = gen_label_text("ESC: Quit", 0);
    m_leftKeyTextNp  = gen_label_text("[Left Arrow]: Turn Left (CCW)", 1);
    m_rightKeyTextNp = gen_label_text("[Right Arrow]: Turn Right (CW)", 2);

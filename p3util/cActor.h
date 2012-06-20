@@ -17,7 +17,8 @@ class CActor : public NodePath, public AnimControlCollection
    {
    public:
 
-   typedef map<string, string> AnimMap;
+   typedef vector<string> NameVec;
+   typedef map<string, NameVec> AnimMap;
 
    CActor();
    virtual ~CActor();
@@ -32,6 +33,11 @@ class CActor : public NodePath, public AnimControlCollection
    private:
 
    typedef vector<NodePath> NodePathVec;
+
+   void load_anims(const AnimMap* animMapPtr,
+                   const string& filename,
+                   int hierarchyMatchFlags);
+   bool is_stored(const AnimControl* animPtr);
    };
 
 #endif /* CACTOR_H_ */

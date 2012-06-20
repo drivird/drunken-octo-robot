@@ -13,25 +13,30 @@
 #include "ambientLight.h"
 #include "cIntervalManager.h"
 
-// Function to put title on the screen.
-NodePath BumpMapDemo::add_title(const string& text) const
-   {
-   return COnscreenText(m_windowFrameworkPtr,
-                        text, Colorf(1,1,1,1),
-                        LPoint2f(1.3,-0.95),
-                        COnscreenText::A_right,
-                        0.07);
-   }
-
 // Function to put instructions on the screen.
 NodePath BumpMapDemo::add_instructions(float pos, const string& msg) const
    {
-   return COnscreenText(m_windowFrameworkPtr,
-                        msg,
-                        Colorf(1,1,1,1),
-                        LPoint2f(-1.3, pos),
-                        COnscreenText::A_left,
-                        0.05);
+   COnscreenText instructions("instructions", COnscreenText::TS_plain);
+   instructions.set_text(msg);
+   instructions.set_fg(Colorf(1,1,1,1));
+   instructions.set_pos(LVecBase2f(-1.3, pos));
+   instructions.set_align(TextNode::A_left);
+   instructions.set_scale(0.05);
+   instructions.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return instructions.generate();
+   }
+
+// Function to put title on the screen.
+NodePath BumpMapDemo::add_title(const string& text) const
+   {
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text(text);
+   title.set_fg(Colorf(1,1,1,1));
+   title.set_pos(LVecBase2f(1.3,-0.95));
+   title.set_align(TextNode::A_right);
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return title.generate();
    }
 
 BumpMapDemo::BumpMapDemo(WindowFramework* windowFrameworkPtr)

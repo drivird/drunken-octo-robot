@@ -18,23 +18,27 @@ const float SPEED = 0.5; // Note: unused
 // Function to put instructions on the screen.
 NodePath World::add_instructions(float pos, const string& msg) const
    {
-   return COnscreenText(m_windowFrameworkPtr,
-                        msg,
-                        Colorf(1,1,1,1),
-                        LPoint2f(-1.3, pos),
-                        COnscreenText::A_left,
-                        0.05);
+   COnscreenText instructions("instructions", COnscreenText::TS_plain);
+   instructions.set_text(msg);
+   instructions.set_fg(Colorf(1,1,1,1));
+   instructions.set_pos(LVecBase2f(-1.3, pos));
+   instructions.set_align(TextNode::A_left);
+   instructions.set_scale(0.05);
+   instructions.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return instructions.generate();
    }
 
 // Function to put title on the screen.
 NodePath World::add_title(const string& text) const
    {
-   return COnscreenText(m_windowFrameworkPtr,
-                        text,
-                        Colorf(1,1,1,1),
-                        LPoint2f(1.3,-0.95),
-                        COnscreenText::A_right,
-                        0.07);
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text(text);
+   title.set_fg(Colorf(1,1,1,1));
+   title.set_pos(LVecBase2f(1.3,-0.95));
+   title.set_align(TextNode::A_right);
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return title.generate();
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -86,12 +90,14 @@ World::World(WindowFramework* windowFrameworkPtr)
    // Create the main character, Ralph
    LPoint3f ralphStartPos = m_environNp.find("**/start_point").get_pos();
    CActor::AnimMap ralphAnims;
-   ralphAnims["run"] = "../models/ralph-run";
-   ralphAnims["walk"] = "../models/ralph-walk";
+   ralphAnims["../models/ralph-run"].push_back("run");
+   ralphAnims["../models/ralph-walk"].push_back("walk");
    m_ralph.load_actor(m_windowFrameworkPtr,
                       "../models/ralph",
                       &ralphAnims,
-                      PartGroup::HMF_ok_wrong_root_name);
+                      PartGroup::HMF_ok_wrong_root_name|
+                      PartGroup::HMF_ok_anim_extra|
+                      PartGroup::HMF_ok_part_extra);
    m_ralph.reparent_to(renderNp);
    m_ralph.set_scale(0.2);
    m_ralph.set_pos(ralphStartPos);

@@ -29,12 +29,14 @@ float World::restrain(float i, float mn /*= -1*/, float mx /*= 1*/)
 // on screen instructions
 NodePath World::gen_label_text(const string& text, int i) const
    {
-   return COnscreenText(m_windowFrameworkPtr,
-                        text,
-                        Colorf(1,1,1,1),
-                        LPoint2f(-1.3, 0.95-0.06*i),
-                        COnscreenText::A_left,
-                        0.05);
+   COnscreenText label("label");
+   label.set_text(text);
+   label.set_pos(LVecBase2f(-1.3, 0.95-0.06*i));
+   label.set_fg(Colorf(1,1,1,1));
+   label.set_align(TextNode::A_left);
+   label.set_scale(0.05);
+   label.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   return label.generate();
    }
 
 World::World(WindowFramework* windowFrameworkPtr)
@@ -48,12 +50,13 @@ World::World(WindowFramework* windowFrameworkPtr)
       }
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = COnscreenText(m_windowFrameworkPtr,
-                             "Panda3D: Tutorial - Joint Manipulation",
-                             Colorf(1,1,1,1),
-                             LPoint2f(0.7, -0.95),
-                             COnscreenText::A_center,
-                             0.07);
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text("Panda3D: Tutorial - Joint Manipulation");
+   title.set_fg(Colorf(1,1,1,1));
+   title.set_pos(LVecBase2f(0.7, -0.95));
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   m_titleNp = title.generate();
    m_esckeyTextNp   = gen_label_text("ESC: Quit"      , 0);
    m_onekeyTextNp   = gen_label_text("[1]: Teapot"    , 1);
    m_twokeyTextNp   = gen_label_text("[2]: Candy cane", 2);
@@ -83,7 +86,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    //       PartGroup::HMF_ok_wrong_root_name to ask auto_bind() to be more
    //       forgiving.
    CActor::AnimMap eveAnims;
-   eveAnims["walk"] = "../models/eve_walk";
+   eveAnims["../models/eve_walk"].push_back("walk");
    m_eve.load_actor(m_windowFrameworkPtr,
                     "../models/eve",
                     &eveAnims,

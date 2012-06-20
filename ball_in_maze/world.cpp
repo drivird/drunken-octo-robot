@@ -30,18 +30,23 @@ World::World(WindowFramework* windowFrameworkPtr)
       }
 
    // This code puts the standard title and instruction text on screen
-   m_titleNp = COnscreenText(m_windowFrameworkPtr,
-                             "Panda3D: Tutorial - Collision Detection",
-                             Colorf(1,1,1,1),
-                             LPoint2f(0.7,-0.95),
-                             COnscreenText::A_center,
-                             0.07);
-   m_instructionsNp = COnscreenText(m_windowFrameworkPtr,
-                                    "Mouse pointer tilts the board",
-                                    Colorf(1,1,1,1),
-                                    LPoint2f(-1.3, 0.95),
-                                    COnscreenText::A_left,
-                                    0.05);
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text("Panda3D: Tutorial - Collision Detection");
+   title.set_fg(Colorf(1,1,1,1));
+   title.set_pos(LVecBase2f(0.7,-0.95));
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   m_titleNp = title.generate();
+
+
+   COnscreenText instructions("instructions");
+   instructions.set_text("Mouse pointer tilts the board");
+   instructions.set_pos(LVecBase2f(-1.3, 0.95));
+   instructions.set_fg(Colorf(1,1,1,1));
+   instructions.set_align(TextNode::A_left);
+   instructions.set_scale(0.05);
+   instructions.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   m_instructionsNp = instructions.generate();
 
    // Escape quits
    m_windowFrameworkPtr->enable_keyboard();

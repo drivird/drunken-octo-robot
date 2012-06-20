@@ -55,40 +55,124 @@ void CActor::load_actor(WindowFramework* windowFrameworkPtr,
    // Is there any animations to bind to the actor?
    if(animMapPtr == NULL) { return; }
 
-   AnimControlCollection tempCollection;
-   NodePathVec animsNp;
-   animsNp.reserve(animMapPtr->size());
+   // load anims from the actor model first
+   load_anims(animMapPtr, actorFilename, hierarchyMatchFlags);
+
+   NodePathVec animNpVec;
+   animNpVec.reserve(animMapPtr->size());
 
    // then for each animations specified by the user
-   for(AnimMap::const_iterator i = animMapPtr->begin(); i != animMapPtr->end(); i++)
+   for(AnimMap::const_iterator animMapItr = animMapPtr->begin(); animMapItr != animMapPtr->end(); ++animMapItr)
       {
-      // load the animation as a child of the actor
-      NodePath animNp = windowFrameworkPtr->load_model(*this, (*i).second);
-      // collect the animation in a temporary collection
-      auto_bind(this->node(), tempCollection, hierarchyMatchFlags);
-      // we should have collected a single animation
-      if(tempCollection.get_num_anims() == 1)
+      const string& filename = (*animMapItr).first;
+      if(filename != actorFilename)
          {
-         // store the animation in the user's collection
-         store_anim(tempCollection.get_anim(0), (*i).first);
+         // load the animation as a child of the actor
+         NodePath animNp = windowFrameworkPtr->load_model(*this, filename);
+
+         // load anims from that file
+         load_anims(animMapPtr, filename, hierarchyMatchFlags);
+
          // detach the node so that it will not appear in a new call to auto_bind()
          animNp.detach_node();
          // keep it on the side
-         animsNp.push_back(animNp);
+         animNpVec.push_back(animNp);
          }
-      else
-         {
-         // something is wrong
-         nout << "WARNING: could not bind animation `" << (*i).first << "' from file `" << (*i).second << "'." << endl;
-         }
-      tempCollection.clear_anims();
       }
 
    // re-attach the animation nodes to the actor
-   for(NodePathVec::iterator np = animsNp.begin(); np < animsNp.end(); ++np)
+   for(NodePathVec::iterator npItr = animNpVec.begin(); npItr < animNpVec.end(); ++npItr)
       {
-      (*np).reparent_to(*this);
+      (*npItr).reparent_to(*this);
       }
+   }
+
+void CActor::load_anims(const AnimMap* animMapPtr,
+                        const string& filename,
+                        int hierarchyMatchFlags)
+   {
+   // precondition
+   if(animMapPtr == NULL)
+      {
+      nout << "ERROR: parameter animMapPtr cannot be NULL." << endl;
+      return;
+      }
+
+   // use auto_bind() to gather the anims
+   AnimControlCollection tempCollection;
+   auto_bind(this->node(), tempCollection, hierarchyMatchFlags);
+
+   // get the anim names for the current file
+   AnimMap::const_iterator animMapItr = animMapPtr->find(filename);
+   if(animMapItr != animMapPtr->end())
+      {
+      // first, test the anim names
+      for(NameVec::const_iterator nameItr = (*animMapItr).second.begin(); nameItr != (*animMapItr).second.end(); ++nameItr)
+         {
+         // make sure this name is not currently stored by the actor
+         if(find_anim(*nameItr) == NULL)
+            {
+            // check if auto_bind() found an animation with the right name
+            PT(AnimControl) animPtr = tempCollection.find_anim(*nameItr);
+            if(animPtr != NULL)
+               {
+               // make sure this anim is not currently stored by the actor
+               if(!is_stored(animPtr))
+                  {
+                  store_anim(animPtr, *nameItr);
+                  tempCollection.unbind_anim(*nameItr);
+                  nout << "Stored animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
+                  }
+               }
+            }
+         else
+            {
+            nout << "WARNING: animation `" << *nameItr << "' already stored in actor" << endl;
+            }
+         }
+
+      // deal the remaining anims
+      int animIdx = 0;
+      for(NameVec::const_iterator nameItr = (*animMapItr).second.begin(); nameItr != (*animMapItr).second.end(); ++nameItr)
+         {
+      // make sure this name is not currently stored by the actor
+         if(find_anim(*nameItr) == NULL)
+            {
+            // make sure there is at least one anim left to store
+            PT(AnimControl) animPtr = tempCollection.get_anim(animIdx);
+            if(animPtr == NULL)
+               {
+               nout << "WARNING: could not store animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
+               }
+            // make sure this anim is not currently stored by the actor
+            else if(!is_stored(animPtr))
+               {
+               store_anim(animPtr, *nameItr);
+               ++animIdx;
+               nout << "Stored animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
+               }
+            }
+         else
+            {
+            nout << "WARNING: animation `" << *nameItr << "' already stored in actor" << endl;
+            }
+         }
+      }
+   }
+
+bool CActor::is_stored(const AnimControl* animPtr)
+   {
+   for(int i = 0; i < get_num_anims(); ++i)
+      {
+      PT(AnimControl) storedAnimPtr = get_anim(i);
+
+      if(animPtr->get_anim() == storedAnimPtr->get_anim() &&
+         animPtr->get_part() == storedAnimPtr->get_part() )
+         {
+         return true;
+         }
+      }
+   return false;
    }
 
 // This function gives access to a joint that can be controlled via its NodePath handle.

@@ -1,0 +1,13 @@
+This is a python to C++ translation of Panda3d sample/tutorial:
+Tut-Cartoon-Advanced.py
+
+Developped on a GNU/Linux Ubuntu distribution, using Eclipse as IDE and 
+Panda3d 1.7 as a framework.
+
+The main objective of this work is for me to learn about Panda3d, C++ and 3d 
+games in general. Has such, it aims at being a C++ program while remaining 
+close to the original python script. I hope you find it helpful and of course,
+constructive critics are always welcome.
+
+-- dri, June 19th 2012
+

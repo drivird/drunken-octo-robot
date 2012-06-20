@@ -28,12 +28,13 @@ World::World(WindowFramework* windowFrameworkPtr)
       }
 
    // This creates the on screen title that is in every tutorial
-   m_titleNp = COnscreenText(m_windowFrameworkPtr,
-                             "Panda3D: Tutorial 2 - Carousel",
-                             Colorf(1,1,1,1),
-                             LPoint2f(0.87,-0.95),
-                             COnscreenText::A_center,
-                             0.07);
+   COnscreenText title("title", COnscreenText::TS_plain);
+   title.set_text("Panda3D: Tutorial 2 - Carousel");
+   title.set_fg(Colorf(1,1,1,1));
+   title.set_pos(LVecBase2f(0.87,-0.95));
+   title.set_scale(0.07);
+   title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
+   m_titleNp = title.generate();
 
    // Set the background color
    m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->set_clear_color(Colorf(0.6, 0.6, 1, 1));
