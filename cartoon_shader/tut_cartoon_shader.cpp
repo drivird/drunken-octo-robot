@@ -19,9 +19,15 @@
  */
 
 #include "pandaFramework.h"
-#include "toonMakerAdvanced.h"
 
+#define RUN_TOON_MAKER_ADVANCED 0
+#if RUN_TOON_MAKER_ADVANCED
+#include "toonMakerAdvanced.h"
 typedef ToonMakerAdvanced ToonMaker;
+#else
+#include "toonMakerBasic.h"
+typedef ToonMakerBasic ToonMaker;
+#endif
 
 int main(int argc, char *argv[])
    {

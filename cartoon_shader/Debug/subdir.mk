@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../toonMakerAdvanced.cpp \
+../toonMakerBasic.cpp \
 ../tut_cartoon_shader.cpp 
 
 OBJS += \
 ./toonMakerAdvanced.o \
+./toonMakerBasic.o \
 ./tut_cartoon_shader.o 
 
 CPP_DEPS += \
 ./toonMakerAdvanced.d \
+./toonMakerBasic.d \
 ./tut_cartoon_shader.d 
 
 
