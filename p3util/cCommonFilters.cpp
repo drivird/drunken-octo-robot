@@ -36,7 +36,7 @@ CCommonFilters::CCommonFilters(GraphicsOutput* win, NodePath cam)
      m_blur(2),
      m_ssao(3),
      m_textures(),
-     m_task(NULL)
+     m_task(new GenericAsyncTask("common-filters-update", call_update, this))
    {
    m_configuration["CartoonInk"] = NULL;
    m_configuration["Bloom"] = NULL;
@@ -67,11 +67,11 @@ void CCommonFilters::cleanup()
    m_blur.clear();
    m_ssao.clear();
 
-   if(m_task != NULL)
+   PT(AsyncTask) task = AsyncTaskManager::
+      get_global_ptr()->find_task("common-filters-update");
+   if(task != NULL)
       {
-      AsyncTaskManager::get_global_ptr()->remove(m_task);
-      delete m_task;
-      m_task = NULL;
+      AsyncTaskManager::get_global_ptr()->remove(task);
       }
    }
 
@@ -401,9 +401,9 @@ bool CCommonFilters::reconfigure(bool fullrebuild, const string& changed)
          m_finalQuad.set_shader_input("tx"+tex, (*i).second);
          }
 
-      if(m_task == NULL)
+      if(AsyncTaskManager::get_global_ptr()->
+         find_task("common-filters-update") == NULL)
          {
-         m_task = new GenericAsyncTask("common-filters-update", call_update, this);
          AsyncTaskManager::get_global_ptr()->add(m_task);
          }
       }

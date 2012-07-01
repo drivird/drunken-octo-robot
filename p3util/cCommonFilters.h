@@ -140,13 +140,13 @@ struct CCommonFilters
    NodePathVec m_blur;
    NodePathVec m_ssao;
    CFilterManager::TexMap m_textures;
-   GenericAsyncTask* m_task;
 
    private:
    const Shader* load_shader(const string& name) const;
    void update();
    static AsyncTask::DoneStatus call_update(GenericAsyncTask *task,
                                             void *user_data);
+   PT(GenericAsyncTask) m_task;
    };
 
 #endif /* CCOMMONFILTERS_H_ */
