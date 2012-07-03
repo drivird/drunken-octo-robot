@@ -1,5 +1,6 @@
 This is a python to C++ translation of Panda3d sample/tutorials:
-Tut-Glow-Filter-Basic.py
+Tut-Glow-Basic.py
+Tut-Glow-Advanced.py
 
 Developped on a GNU/Linux Ubuntu distribution, using Eclipse as IDE and 
 Panda3d 1.7 as a framework.

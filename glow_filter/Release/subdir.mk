@@ -4,14 +4,17 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../glowDemoAdvanced.cpp \
 ../glowDemoBasic.cpp \
 ../tut_glow_filter.cpp 
 
 OBJS += \
+./glowDemoAdvanced.o \
 ./glowDemoBasic.o \
 ./tut_glow_filter.o 
 
 CPP_DEPS += \
+./glowDemoAdvanced.d \
 ./glowDemoBasic.d \
 ./tut_glow_filter.d 
 
