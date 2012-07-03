@@ -17,7 +17,7 @@
 
 #include "pandaFramework.h"
 
-#define RUN_GLOW_DEMO_ADVANCED 1
+#define RUN_GLOW_DEMO_ADVANCED 0
 #if RUN_GLOW_DEMO_ADVANCED
 #include "glowDemoAdvanced.h"
 typedef GlowDemoAdvanced GlowDemo;
