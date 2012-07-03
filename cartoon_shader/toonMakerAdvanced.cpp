@@ -101,8 +101,8 @@ ToonMakerAdvanced::ToonMakerAdvanced(WindowFramework* windowFrameworkPtr)
    NodePath normalsCameraNp = m_windowFrameworkPtr->make_camera();
    // Note: the new camera needs to use the lens of the main window camera
    PT(Lens) lensPtr = m_windowFrameworkPtr->get_camera(0)->get_lens();
-   static_cast<Camera*>(normalsCameraNp.node())->set_lens(lensPtr);
-   static_cast<Camera*>(normalsCameraNp.node())->set_scene(renderNp);
+   DCAST(Camera, normalsCameraNp.node())->set_lens(lensPtr);
+   DCAST(Camera, normalsCameraNp.node())->set_scene(renderNp);
    // Note: the new camera needs to be associated to the texture buffer through a display region
    PT(DisplayRegion) m_displayRegionPtr = m_normalsBufferPtr->make_display_region(0, 1, 0, 1);
    m_displayRegionPtr->set_sort(10000);

@@ -6,6 +6,7 @@
  *
  * This is a python to C++ translation of Panda3d 1.7 sample/tutorial:
  * Tut-Cartoon-Basic.py
+ * Tut-Cartoon-Advanced.py
  *
  * Here's the original python tutorial header:
  *

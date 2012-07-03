@@ -46,7 +46,7 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
    : m_windowFrameworkPtr(windowFrameworkPtr),
      m_bufferViewer(windowFrameworkPtr),
      m_separation(1),
-     m_filters(NULL),
+     m_filters(),
      m_titleNp(),
      m_inst1Np(),
      m_inst2Np(),
@@ -61,9 +61,11 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
 
    // Check video card capabilities.
 
-   if(!m_windowFrameworkPtr->get_graphics_window()->get_gsg()->get_supports_basic_shaders())
+   if(!m_windowFrameworkPtr->get_graphics_window()->get_gsg()->
+      get_supports_basic_shaders())
       {
-      add_title("Toon Shader: Video driver reports that shaders are not supported.");
+      add_title(
+         "Toon Shader: Video driver reports that shaders are not supported.");
       return;
       }
 
@@ -77,7 +79,8 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
    tempnode.set_shader_auto();
    m_windowFrameworkPtr->get_camera(0)->set_initial_state(tempnode.get_state());
 
-   m_filters = new CCommonFilters(windowFrameworkPtr->get_graphics_output(), NodePath(windowFrameworkPtr->get_camera(0)));
+   m_filters.reset(new CCommonFilters(windowFrameworkPtr->get_graphics_output(),
+      NodePath(windowFrameworkPtr->get_camera(0))));
 
    // Use class 'CommonFilters' to enable a cartoon inking filter.
    // This can fail if the video card is not powerful enough, if so,
@@ -86,15 +89,18 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
    bool filterok = m_filters->set_cartoon_ink(m_separation);
    if(!filterok)
       {
-      add_title("Toon Shader: Video card not powerful enough to do image postprocessing");
+      add_title("Toon Shader: "
+         "Video card not powerful enough to do image postprocessing");
       return;
       }
 
    // Post the instructions.
 
-   m_titleNp = add_title("Panda3D: Tutorial - Toon Shading with Normals-Based Inking");
+   m_titleNp = add_title(
+      "Panda3D: Tutorial - Toon Shading with Normals-Based Inking");
    m_inst1Np = add_instructions(0.95, "ESC: Quit");
-   m_inst2Np = add_instructions(0.90, "Up/Down: Increase/Decrease Line Thickness");
+   m_inst2Np = add_instructions(0.90,
+      "Up/Down: Increase/Decrease Line Thickness");
    m_inst3Np = add_instructions(0.85, "V: View the render-to-texture results");
 
    // Load a dragon model and animate it.
@@ -111,13 +117,14 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
    m_character.reparent_to(render);
    m_character.loop("win", true);
 
-   PT(CLerpNodePathInterval) hprIntervalPtr = new CLerpNodePathInterval("hprInterval",
-                                                                        15,
-                                                                        CLerpInterval::BT_no_blend,
-                                                                        true,
-                                                                        false,
-                                                                        m_character,
-                                                                        NodePath());
+   PT(CLerpNodePathInterval) hprIntervalPtr =
+      new CLerpNodePathInterval("hprInterval",
+                                15,
+                                CLerpInterval::BT_no_blend,
+                                true,
+                                false,
+                                m_character,
+                                NodePath());
    if(hprIntervalPtr != NULL)
       {
       hprIntervalPtr->set_start_hpr(LVecBase3f(0  , 0, 0));
@@ -125,9 +132,10 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
       hprIntervalPtr->loop();
       }
 
-   AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("stepIntervalManagerTask",
-                                                                step_interval_manager,
-                                                                NULL));
+   AsyncTaskManager::get_global_ptr()->add(
+      new GenericAsyncTask("stepIntervalManagerTask",
+                           step_interval_manager,
+                           NULL));
 
    // Create a non-attenuating point light and an ambient light.
 
@@ -146,20 +154,22 @@ ToonMakerBasic::ToonMakerBasic(WindowFramework* windowFrameworkPtr)
    // see what class CommonFilters is doing behind the scenes.
 
    m_windowFrameworkPtr->enable_keyboard();
-   m_windowFrameworkPtr->get_panda_framework()->define_key("v", "toggleBufferViewerEnable", call_buffer_viewer_toggle_enable, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("v",
+      "toggleBufferViewerEnable", call_buffer_viewer_toggle_enable, this);
    m_bufferViewer.set_position(CBufferViewer::CP_llcorner);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("s", "filtersManagerResizeBuffers", call_filters_manager_resize_buffers, this);
+   m_windowFrameworkPtr->get_panda_framework()->define_key("s",
+      "filtersManagerResizeBuffers", call_filters_manager_resize_buffers, this);
 
    // These allow you to change cartooning parameters in realtime
 
-   m_windowFrameworkPtr->get_panda_framework()->define_key("escape"     , "sysExit"           , sys_exit                , NULL);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_up"   , "increaseSeparation", call_increase_separation, this);
-   m_windowFrameworkPtr->get_panda_framework()->define_key("arrow_down" , "decreaseSeparation", call_decrease_separation, this);
-   }
-
-ToonMakerBasic::~ToonMakerBasic()
-   {
-   delete m_filters;
+   m_windowFrameworkPtr->get_panda_framework()->
+      define_key("escape", "sysExit", sys_exit, NULL);
+   m_windowFrameworkPtr->get_panda_framework()->
+      define_key("arrow_up", "increaseSeparation", call_increase_separation,
+         this);
+   m_windowFrameworkPtr->get_panda_framework()->
+      define_key("arrow_down", "decreaseSeparation", call_decrease_separation,
+         this);
    }
 
 void ToonMakerBasic::increase_separation()
@@ -176,7 +186,8 @@ void ToonMakerBasic::decrease_separation()
    m_filters->set_cartoon_ink(m_separation);
    }
 
-AsyncTask::DoneStatus ToonMakerBasic::step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr)
+AsyncTask::DoneStatus ToonMakerBasic::
+step_interval_manager(GenericAsyncTask* taskPtr, void* dataPtr)
    {
    CIntervalManager::get_global_ptr()->step();
    return AsyncTask::DS_cont;
@@ -187,7 +198,8 @@ void ToonMakerBasic::sys_exit(const Event* eventPtr, void* dataPtr)
    exit(0);
    }
 
-void ToonMakerBasic::call_increase_separation(const Event* eventPtr, void* dataPtr)
+void ToonMakerBasic::call_increase_separation(const Event* eventPtr,
+                                              void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -199,7 +211,8 @@ void ToonMakerBasic::call_increase_separation(const Event* eventPtr, void* dataP
    static_cast<ToonMakerBasic*>(dataPtr)->increase_separation();
    }
 
-void ToonMakerBasic::call_decrease_separation(const Event* eventPtr, void* dataPtr)
+void ToonMakerBasic::call_decrease_separation(const Event* eventPtr,
+                                              void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -211,7 +224,8 @@ void ToonMakerBasic::call_decrease_separation(const Event* eventPtr, void* dataP
    static_cast<ToonMakerBasic*>(dataPtr)->decrease_separation();
    }
 
-void ToonMakerBasic::call_buffer_viewer_toggle_enable(const Event* eventPtr, void* dataPtr)
+void ToonMakerBasic::call_buffer_viewer_toggle_enable(const Event* eventPtr,
+                                                      void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
@@ -223,7 +237,8 @@ void ToonMakerBasic::call_buffer_viewer_toggle_enable(const Event* eventPtr, voi
    static_cast<ToonMakerBasic*>(dataPtr)->m_bufferViewer.toggle_enable();
    }
 
-void ToonMakerBasic::call_filters_manager_resize_buffers(const Event* eventPtr, void* dataPtr)
+void ToonMakerBasic::call_filters_manager_resize_buffers(const Event* eventPtr,
+                                                         void* dataPtr)
    {
    // preconditions
    if(dataPtr == NULL)
