@@ -43,7 +43,6 @@ class World
    PT(MovieTexture) m_tex;
    PT(AudioManager) m_audioManager;
    PT(AudioSound) m_sound;
-   PT(GenericAsyncTask) m_audioLoop;
    };
 
 inline World::~World()

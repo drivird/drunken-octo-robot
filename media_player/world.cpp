@@ -7,7 +7,6 @@
 
 #include "../p3util/cOnscreenText.h"
 #include "cardMaker.h"
-#include "load_prc_file.h"
 #include "world.h"
 
 const char* World::MEDIAFILE = "../PandaSneezes.avi";
@@ -44,24 +43,17 @@ NodePath World::add_title(const string& text)
 
 World::World(WindowFramework* windowFrameworkPtr)
    : m_windowFrameworkPtr(windowFrameworkPtr),
-     m_title(),
-     m_inst1(),
-     m_inst2(),
-     m_inst3(),
-     m_tex(NULL),
-     m_audioManager(NULL),
-     m_sound(NULL),
-     m_audioLoop(NULL)
+     m_title(add_title("Panda3D: Tutorial - Media Player")),
+     m_inst1(add_instructions(0.95,"P: Play/Pause")),
+     m_inst2(add_instructions(0.90,"S: Stop and Rewind")),
+     m_inst3(add_instructions(0.85,"M: Slow Motion / Normal Motion toggle")),
+     m_tex(new MovieTexture("name")),
+     m_audioManager(AudioManager::create_AudioManager()),
+     m_sound(m_audioManager->get_sound(MEDIAFILE))
    {
-   m_title = add_title("Panda3D: Tutorial - Media Player");
-   m_inst1 = add_instructions(0.95,"P: Play/Pause");
-   m_inst2 = add_instructions(0.90,"S: Stop and Rewind");
-   m_inst3 = add_instructions(0.85,"M: Slow Motion / Normal Motion toggle");
-
    // Load the texture. We could use loader.loadTexture for this,
    // but we want to make sure we get a MovieTexture, since it
    // implements synchronizeTo.
-   m_tex = new MovieTexture("name");
    if(!m_tex->read(MEDIAFILE))
       {
       nout << "Failed to load video!" << endl;
@@ -85,12 +77,6 @@ World::World(WindowFramework* windowFrameworkPtr)
    //       2) load the file
    //       3) update the manage using a task
    //       4) shutdown the manager when you are done
-
-   // Tell Panda3D to use OpenAL, not FMOD
-   load_prc_file_data("", "audio-library-name p3openal_audio");
-
-   m_audioManager = AudioManager::create_AudioManager();
-   m_sound = m_audioManager->get_sound(MEDIAFILE);
    AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("audioLoop",
                                                                 call_audio_loop,
                                                                 this));

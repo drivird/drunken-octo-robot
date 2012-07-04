@@ -9,6 +9,7 @@
  */
 
 #include "pandaFramework.h"
+#include "load_prc_file.h"
 #include "world.h"
 
 int main(int argc, char *argv[])
@@ -22,6 +23,9 @@ int main(int argc, char *argv[])
       nout << "ERROR: could not open the WindowFramework." << endl;
       return 1; // error
       }
+
+   // Tell Panda3D to use OpenAL, not FMOD
+   load_prc_file_data("", "audio-library-name p3openal_audio");
 
    // Create an instance of our class
    World world(windowFrameworkPtr);
