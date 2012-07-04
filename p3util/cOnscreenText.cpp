@@ -412,6 +412,12 @@ void COnscreenText::set_shadow(const Colorf& shadow)
       }
    }
 
+// Reimplementation of TextNode::set_shadow.
+void COnscreenText::set_shadow_offset(const LVecBase2f& offset)
+   {
+   m_textNode->set_shadow(offset);
+   }
+
 // Reimplementation of TextNode::set_frame_color
 // frame: the (r, g, b, a) color of the frame drawn around the
 //        text.  If the fourth value, a, is nonzero, a frame is

@@ -70,6 +70,7 @@ class COnscreenText : public NodePath
    void set_fg(const Colorf& fg);
    void set_bg(const Colorf& bg);
    void set_shadow(const Colorf& shadow);
+   void set_shadow_offset(const LVecBase2f& offset);
    void set_frame(const Colorf& frame);
 
    void set_align(TextNode::Alignment align);
