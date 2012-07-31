@@ -85,7 +85,7 @@ inline void define_key_t(WindowFramework* wf,
       return;
       }
 
-   // keyboard needs to be enabled and since it does hurt to enable it
+   // keyboard needs to be enabled and since it does not hurt to enable it
    // multiple times, just enable it at each call.
    wf->enable_keyboard();
    // at the compilation, an EventCallbackStub for T::func will be generated
@@ -105,10 +105,9 @@ inline void define_key_t(WindowFramework* wf,
 //
 // *Parameters*
 // T    class of obj, see that parameter below.
-// func member function to callback, i.e. T::func, upon the key event.
+// func member function the task manager has to callback, i.e. T::func.
 //      The signature of the member function must be:
 //      AsyncTask::DoneStatus T::foo(GenericAsyncTask *task)
-// wf   the Panda3d window posting the events.
 // name same parameter as in GenericAsyncTask::GenericAsyncTask.
 // obj  the object affected by the key event.
 //
@@ -139,6 +138,45 @@ inline GenericAsyncTask* add_task_t(const string &name, T* obj)
    AsyncTaskManager::get_global_ptr()->add(task);
    // return the task so the user can control it
    return task;
+   }
+
+// Function: add_hook_t
+//
+// *Brief*
+// Templatized version of EventHandler::add_hook(const string &event_name,
+// EventCallbackFunction *function, void *data). Will create at compilation
+// time the static stub function that calls the member function func of object
+// obj.
+//
+// *Parameters*
+// T          class of obj, see that parameter below.
+// func       member function to callback, i.e. T::func, upon the event.
+//            The signature of the member function must be:
+//            AsyncTask::DoneStatus T::foo(const Event* event)
+// event_name same parameter as in EventHandler::add_hook.
+// obj        the object affected by the event.
+//
+// *Example*
+// For class World with member function cont_tunnel that is to be called upon
+// event "contTunnel":
+//
+// bool success =
+//    add_hook_t<World, &World::cont_tunnel>("contTunnel", this);
+//
+// Can be simplified further using a macro to specify constant parameters:
+//
+// #define WORLD_ADD_HOOK(event_name, func)
+// add_hook_t<World, &World::func>(event_name, this)
+//
+// Then the call above would be reduced to:
+//
+// bool success = WORLD_ADD_HOOK("contTunnel", cont_tunnel);
+//
+template <class T, void (T::*func)(const Event* event)>
+inline bool add_hook_t(const string& event_name, T* obj)
+   {
+   return EventHandler::get_global_event_handler()->add_hook(
+      event_name, &EventCallbackStub<T, func>, obj);
    }
 
 // Templatized stub function with the signature of EventHandler::
