@@ -70,12 +70,13 @@ World::World(WindowFramework* windowFrameworkPtr)
    card.set_tex_scale(TextureStage::get_default(), m_tex->get_tex_scale());
 
    // Note: function loader.loadSfx is python only. In C++ we need to manage
-   //       the AudioManager ourselves. Look for self.sfxManagerList in file
-   //       ShowBase.py for more info. The procedure is like that:
-   //       *) configure which audio library to use
+   //       the AudioManager ourselves. Read the manual or look for
+   //       self.sfxManagerList in file ShowBase.py for more info.
+   //       The procedure is like this:
+   //       *) configure which audio library to use (*optional)
    //       1) create the manager
    //       2) load the file
-   //       3) update the manage using a task
+   //       3) update the manager using a task
    //       4) shutdown the manager when you are done
    AsyncTaskManager::get_global_ptr()->add(new GenericAsyncTask("audioLoop",
                                                                 call_audio_loop,

@@ -104,9 +104,9 @@ void CSoundInterval::play_sound(double t1)
    }
 
 void CSoundInterval::loop(double start_time, // = 0.0
-          double end_t,                   // = -1.0
-          double play_rate,               // = 1.0
-          bool stagger)                   // = false
+                          double end_t,      // = -1.0
+                          double play_rate,  // = 1.0
+                          bool stagger)      // = false
    {
    loop(start_time, end_t, play_rate);
    if(stagger)
@@ -122,7 +122,3 @@ void CSoundInterval::finish()
    _in_finish = false;
    }
 
-void CSoundInterval::set_volume(float volume)
-   {
-   _volume = volume;
-   }

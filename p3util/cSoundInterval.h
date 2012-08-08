@@ -8,7 +8,7 @@
  * functionalities are there save the volume adjusted according to the distance
  * to a listenerNode as this feature depends on SfxPlayer, another Panda3d
  * python class. As a workaround, setup a task that computes the distance from
- * the sound source and adjust the volume at every frame.
+ * the sound source and adjust the volume at every frame using set_volume().
  */
 
 #ifndef CSOUNDINTERVAL_H_
@@ -52,6 +52,12 @@ class CSoundInterval : public CInterval
    Randomizer _randomizer;
    };
 
+inline void 
+CSoundInterval::set_volume(float volume)
+   {
+   _volume = volume;
+   }
+
 class CSoundInterval::Parameters
    {
    public:
@@ -86,8 +92,9 @@ class CSoundInterval::Parameters
    bool _open_ended;
    };
 
-inline CSoundInterval::Parameters::Parameters(const string& name,
-                                              AudioSound* sound)
+inline
+CSoundInterval::Parameters::Parameters(const string& name,
+                                       AudioSound* sound)
    : _name(name),
      _sound(sound),
      _loop(false),

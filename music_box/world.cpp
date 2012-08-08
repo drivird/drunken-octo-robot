@@ -51,7 +51,7 @@ World::World(WindowFramework* windowFramework)
    title.set_pos(0.7, -0.95);
    title.set_scale(0.07);
    m_title = title.generate();
-   const NodePath aspect2d = m_windowFramework->get_aspect_2d();
+   const NodePath& aspect2d = m_windowFramework->get_aspect_2d();
    m_title.reparent_to(aspect2d);
    COnscreenText escapeEventText("escape", COnscreenText::TS_plain);
    escapeEventText.set_text("ESC: Quit");
@@ -136,7 +136,7 @@ World::World(WindowFramework* windowFramework)
     m_slider = aspect2d.attach_new_node(slider);
     m_slider.set_pos(0, 0, 0.7);
 
-    const string slider_event = slider->get_adjust_event();
+    const string& slider_event = slider->get_adjust_event();
     WORLD_DEFINE_KEY(slider_event, "setMusicBoxVolume", set_music_box_volume);
 
     // A button that calls self.toggleMusicBox when pressed
@@ -158,10 +158,10 @@ World::World(WindowFramework* windowFramework)
 
     // Here we load and set up the music box. It was modeled in a complex way, so
     // setting it up will be complicated
-    const NodePath models = m_windowFramework->get_panda_framework()->get_models();
+    const NodePath& models = m_windowFramework->get_panda_framework()->get_models();
     m_musicBox = m_windowFramework->load_model(models, "../models/MusicBox");
     m_musicBox.set_pos(0, 60, -10);
-    const NodePath render = m_windowFramework->get_render();
+    const NodePath& render = m_windowFramework->get_render();
     m_musicBox.reparent_to(render);
     // Just like the scene graph contains hierarchies of nodes, so can
     // models. You can get the NodePath for the node using the find
@@ -233,7 +233,7 @@ void World::set_music_box_volume(const Event* event)
 
 void World::toggle_music_box(const Event* event)
    {
-   const NodePath aspect2d = m_windowFramework->get_aspect_2d();
+   const NodePath& aspect2d = m_windowFramework->get_aspect_2d();
    if(m_boxOpen)
       {
       // close the box
@@ -288,7 +288,7 @@ NodePath World::MakeButton(const string& name,
    PT(PGButton) button = new PGButton(name);
    const float bevel = 0.1;
    button->setup(label, bevel);
-   const NodePath aspect2d = m_windowFramework->get_aspect_2d();
+   const NodePath& aspect2d = m_windowFramework->get_aspect_2d();
    NodePath buttonNp = aspect2d.attach_new_node(button);
    buttonNp.set_scale(0.1);
    // Note: PGButton's setup is quite different from DirectButton's so just
