@@ -52,7 +52,7 @@ void CActor::load_actor(WindowFramework* windowFrameworkPtr,
    NodePath modelsNp = windowFrameworkPtr->get_panda_framework()->get_models();
    NodePath::operator=(windowFrameworkPtr->load_model(modelsNp, actorFilename));
 
-   // Is there any animations to bind to the actor?
+   // If there are no animations to bind to the actor, we are done here.
    if(animMapPtr == NULL) { return; }
 
    // load anims from the actor model first
@@ -116,18 +116,10 @@ void CActor::load_anims(const AnimMap* animMapPtr,
             PT(AnimControl) animPtr = tempCollection.find_anim(*nameItr);
             if(animPtr != NULL)
                {
-               // make sure this anim is not currently stored by the actor
-               if(!is_stored(animPtr))
-                  {
-                  store_anim(animPtr, *nameItr);
-                  tempCollection.unbind_anim(*nameItr);
-                  nout << "Stored animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
-                  }
+               store_anim(animPtr, *nameItr);
+               tempCollection.unbind_anim(*nameItr);
+               nout << "Stored animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
                }
-            }
-         else
-            {
-            nout << "WARNING: animation `" << *nameItr << "' already stored in actor" << endl;
             }
          }
 
@@ -135,26 +127,17 @@ void CActor::load_anims(const AnimMap* animMapPtr,
       int animIdx = 0;
       for(NameVec::const_iterator nameItr = (*animMapItr).second.begin(); nameItr != (*animMapItr).second.end(); ++nameItr)
          {
-      // make sure this name is not currently stored by the actor
+         // make sure this name is not currently stored by the actor
          if(find_anim(*nameItr) == NULL)
             {
             // make sure there is at least one anim left to store
             PT(AnimControl) animPtr = tempCollection.get_anim(animIdx);
-            if(animPtr == NULL)
-               {
-               nout << "WARNING: could not store animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
-               }
-            // make sure this anim is not currently stored by the actor
-            else if(!is_stored(animPtr))
+            if(animPtr != NULL)
                {
                store_anim(animPtr, *nameItr);
                ++animIdx;
                nout << "Stored animation `" << *nameItr << "' from file `" << (*animMapItr).first << "'" << endl;
                }
-            }
-         else
-            {
-            nout << "WARNING: animation `" << *nameItr << "' already stored in actor" << endl;
             }
          }
       }
