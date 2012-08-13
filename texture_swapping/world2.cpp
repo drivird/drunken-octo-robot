@@ -12,12 +12,6 @@
 #include "world2.h"
 
 // Note: These macros lighten the call to template functions
-#define WORLD2_DEFINE_KEY(event_name, description, func) \
-   define_key_t<World2, &World2::func>(m_windowFramework, \
-                                       event_name,        \
-                                       description,       \
-                                       this)
-
 #define WORLD2_ADD_TASK(name, func) \
    add_task_t<World2, &World2::func>(name, this)
 
