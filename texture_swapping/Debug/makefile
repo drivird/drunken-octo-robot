@@ -44,7 +44,7 @@ all: texture_swapping
 texture_swapping: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L/usr/lib/panda3d -o"texture_swapping" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/usr/lib/panda3d -L../../p3util -o"texture_swapping" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
