@@ -14,6 +14,7 @@
  * Templatized callbacks are:
  * PandaFramework::define_key --> define_key_t
  * AsyncTaskManager::add --> add_task_t
+ * EventHandler::add_hook --> add_hook_t
  */
 
 #ifndef CALLBACKUTIL_H_

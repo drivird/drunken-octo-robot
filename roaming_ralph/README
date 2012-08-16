@@ -1,8 +1,28 @@
 This is a python to C++ translation of Panda3d sample/tutorial:
 Tut-Roaming-Ralph.py
 
-Developped on a GNU/Linux Ubuntu distribution, using Eclipse as IDE and 
-Panda3d 1.7 as a framework.
+*Developped using
+Panda3D SDK 1.7.2 (panda3d1.7_1.7.2~maverick_i386.deb)
+Eclipse SDK 3.5.2 / CDT 6.0.2
+Ubuntu 10.10 (maverick)
+
+*Note to Eclipse CDT users:
+First import the project into your workspace. To do so:
+File > Import... > General > Existing Projects into Workspace
+Then click Next and Browse to the sample program directory. Check `Copy projects into workspace' if needed and you're Finish'ed.
+
+In order to compile the project, you'll need to define a path variable pointing to directory `p3util'. Since path variables exist within the workspace (as opposed to a project), /this step will only need to be done once/. To do so move to:
+Project > Properties > C/C++ General > Path and Symbols > Source Location
+Then, click button `Link Folder...',
+click button `Advanced >>',
+check box `Link to folder in the file system',
+click button `Variables...',
+click button `New...',
+fill field `Name:' with "P3UTILPATH",
+click button `Folder...',
+browse to folder `p3util',
+and then click buttons `OK' until you exit the Project Properties.
+
 
 The main objective of this work is for me to learn about Panda3d, C++ and 3d 
 games in general. Has such, it aims at being a C++ program while remaining 
