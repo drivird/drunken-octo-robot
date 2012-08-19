@@ -109,7 +109,7 @@ ToonMakerAdvanced::ToonMakerAdvanced(WindowFramework* windowFrameworkPtr)
    m_displayRegionPtr->set_camera(normalsCameraNp);
    tempnodeNp = NodePath("temp node");
    tempnodeNp.set_shader(ShaderPool::load_shader("../normalGen.sha"));
-   static_cast<Camera*>(normalsCameraNp.node())->set_initial_state(tempnodeNp.get_state());
+   DCAST(Camera, normalsCameraNp.node())->set_initial_state(tempnodeNp.get_state());
 
    // what we actually do to put edges on screen is apply them as a texture to
    // a transparent screen-fitted card

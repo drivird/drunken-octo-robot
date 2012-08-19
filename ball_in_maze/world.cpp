@@ -138,7 +138,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    // mask of no bits. This means that the ball can only cause collisions, not
    // be collided into
    m_ballSphereNp = m_ballNp.find("**/ball");
-   static_cast<CollisionNode*>(m_ballSphereNp.node())->set_from_collide_mask(BitMask32::bit(0));
+   DCAST(CollisionNode, m_ballSphereNp.node())->set_from_collide_mask(BitMask32::bit(0));
    m_ballSphereNp.node()->set_into_collide_mask(BitMask32::all_off());
 
    // No we create a ray to start above the ball and cast down. This is to
@@ -252,7 +252,7 @@ void World::start()
       }
 
    // Create the movement task, but first make sure it is not already running
-   PT(GenericAsyncTask) rollTaskPtr = static_cast<GenericAsyncTask*>(AsyncTaskManager::get_global_ptr()->find_task("rollTask"));
+   PT(GenericAsyncTask) rollTaskPtr = DCAST(GenericAsyncTask, AsyncTaskManager::get_global_ptr()->find_task("rollTask"));
    if(rollTaskPtr == NULL)
       {
       rollTaskPtr = new GenericAsyncTask("rollTask", call_roll, this);
@@ -390,7 +390,7 @@ void World::lose_game(const CollisionEntry& entry)
    LPoint3f toPos = entry.get_interior_point(renderNp);
 
    // Stop the maze task
-   PT(GenericAsyncTask) rollTaskPtr = static_cast<GenericAsyncTask*>(AsyncTaskManager::get_global_ptr()->find_task("rollTask"));
+   PT(GenericAsyncTask) rollTaskPtr = DCAST(GenericAsyncTask, AsyncTaskManager::get_global_ptr()->find_task("rollTask"));
    if(rollTaskPtr != NULL)
       {
       AsyncTaskManager::get_global_ptr()->remove(rollTaskPtr);
@@ -447,7 +447,7 @@ void World::lose_game(const CollisionEntry& entry)
 
    EventHandler::get_global_event_handler()->add_hook("restartGame", call_start, this);
 
-   PT(GenericAsyncTask) intervalManagerTaskPtr = static_cast<GenericAsyncTask*>(AsyncTaskManager::get_global_ptr()->find_task("intervalManagerTask"));
+   PT(GenericAsyncTask) intervalManagerTaskPtr = DCAST(GenericAsyncTask, AsyncTaskManager::get_global_ptr()->find_task("intervalManagerTask"));
    if(intervalManagerTaskPtr == NULL)
       {
       intervalManagerTaskPtr = new GenericAsyncTask("intervalManagerTask", step_interval_manager, NULL);
