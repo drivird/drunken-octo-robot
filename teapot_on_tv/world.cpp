@@ -66,8 +66,7 @@ World::World(WindowFramework* windowFramework)
      // m_tvMen
    {
    // Note: set background color here
-   m_windowFramework->get_graphics_output()->get_active_display_region(0)->
-      set_clear_color(Colorf(0, 0, 0, 1));
+   m_windowFramework->set_background_type(WindowFramework::BT_black);
 
    // Post the instructions.
    m_title = add_title("Panda3D: Tutorial - Using Render-to-Texture");

@@ -57,7 +57,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    m_keyMap[K_forward  ] = false;
    m_keyMap[K_cam_left ] = false;
    m_keyMap[K_cam_right] = false;
-   m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->set_clear_color(Colorf(0,0,0,1));
+   m_windowFrameworkPtr->set_background_type(WindowFramework::BT_black);
 
    // Post the instructions
 

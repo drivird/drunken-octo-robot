@@ -82,8 +82,7 @@ World::World(WindowFramework* windowFramework)
    m_twokeyEventText = twokeyEventText.generate();
 
    // Set the background color
-   m_windowFramework->get_graphics_output()->get_active_display_region(0)->
-      set_clear_color(Colorf(0, 0, 0, 1));
+   m_windowFramework->set_background_type(WindowFramework::BT_black);
 
    // Set up the key input
    // Escape quits

@@ -563,9 +563,8 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="P3UTIL_PATH|p3util" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
-<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="p3util"/>
-<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="P3UTIL_PATH"/>
+<entry excluding="P3UTILPATH|P3UTIL_PATH|p3util" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="P3UTILPATH"/>
 </sourceEntries>
 </configuration>
 </storageModule>

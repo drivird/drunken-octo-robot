@@ -312,8 +312,8 @@ void World::set_fog_color(const Event* event)
 template<int r, int g, int b>
 void World::set_background_color(const Event* event)
    {
-   m_windowFramework->get_graphics_window()->get_active_display_region(0)->
-      set_clear_color(Colorf(0.1*r, 0.1*g, 0.1*b ,1));
+   m_windowFramework->get_display_region_3d()->
+         set_clear_color(Colorf(0.1*r, 0.1*g, 0.1*b ,1));
    }
 
 void World::quit(const Event* event)

@@ -42,8 +42,7 @@ World4::World4(WindowFramework* windowFrameworkPtr)
    m_title.reparent_to(m_windowFrameworkPtr->get_aspect_2d());
 
    // Set the background to black
-   m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->
-      set_clear_color(Colorf(0, 0, 0, 0));
+   m_windowFrameworkPtr->set_background_type(WindowFramework::BT_black);
    // Note: mouse ain't enable by default in C++
    // base.disableMouse()              // disable mouse control of the camera
    NodePath camera = m_windowFrameworkPtr->get_camera_group();

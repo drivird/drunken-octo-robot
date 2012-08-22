@@ -37,7 +37,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    m_titleNp = title.generate();
 
    // Set the background color
-   m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->set_clear_color(Colorf(0.6, 0.6, 1, 1));
+   m_windowFrameworkPtr->get_display_region_3d()->set_clear_color(Colorf(0.6, 0.6, 1, 1));
    // Allow manual positioning of the camera
    // Note: in that state by default in C++
    NodePath cameraNp = m_windowFrameworkPtr->get_camera_group();

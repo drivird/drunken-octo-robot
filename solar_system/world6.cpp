@@ -77,8 +77,7 @@ World6::World6(WindowFramework* windowFrameworkPtr)
      m_simRunning(true)
    {
    // The standard camera position and background initialization
-   m_windowFramework->get_graphics_window()->get_active_display_region(0)->
-      set_clear_color(Colorf(0, 0, 0, 0));
+   m_windowFramework->set_background_type(WindowFramework::BT_black);
    // base.disableMouse() // Note: mouse ain't enable by default in C++
    NodePath camera = m_windowFramework->get_camera_group();
    camera.set_pos(0, 0, 45);

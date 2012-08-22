@@ -23,8 +23,7 @@ World2::World2(WindowFramework* windowFrameworkPtr)
 
    // Make the background color black (R=0, G=0, B=0)
    // instead of the default grey
-   m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->
-      set_clear_color(Colorf(0, 0, 0, 0));
+   m_windowFrameworkPtr->set_background_type(WindowFramework::BT_black);
 
    // By default, the mouse controls the camera. Often, we disable that so that
    // the camera can be placed manually (if we don't do this, our placement

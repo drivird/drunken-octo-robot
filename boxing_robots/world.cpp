@@ -56,7 +56,7 @@ World::World(WindowFramework* windowFrameworkPtr)
    // Note: no need to disable the mouse in C++
    NodePath cameraNp = m_windowFrameworkPtr->get_camera_group();
    cameraNp.set_pos_hpr(14.5, -15.4, 14, 45, -14, 0);
-   m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->set_clear_color(Colorf(0,0,0,1));
+   m_windowFrameworkPtr->set_background_type(WindowFramework::BT_black);
 
    // Add lighting so that the objects are not drawn flat
    setup_lights();

@@ -165,8 +165,7 @@ GlowDemoAdvanced::GlowDemoAdvanced(WindowFramework* windowFrameworkPtr)
    {
    // Note: no need to disable the mouse in C++
    // base.disableMouse()
-   m_windowFrameworkPtr->get_graphics_window()->get_active_display_region(0)->
-      set_clear_color(Colorf(0,0,0,1));
+   m_windowFrameworkPtr->set_background_type(WindowFramework::BT_black);
    m_windowFrameworkPtr->get_camera_group().set_pos(0, -50, 0);
 
    // Check video card capabilities.

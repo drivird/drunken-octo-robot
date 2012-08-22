@@ -69,8 +69,7 @@ DistortionDemo::DistortionDemo(WindowFramework* windowFramework)
      m_distortionOn(true)
    {
    // base.disableMouse() // no for this in C++
-   m_windowFramework->get_graphics_output()->get_active_display_region(0)->
-      set_clear_color(Colorf(0, 0, 0, 1));
+   m_windowFramework->set_background_type(WindowFramework::BT_black);
    DEMO_ADD_TASK("updateScene", update_scene);
 
    // Show the instructions
