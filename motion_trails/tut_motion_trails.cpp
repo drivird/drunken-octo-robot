@@ -4,7 +4,7 @@
  *  Created on: 2012-08-18
  *      Author: dri
  *
- * This is a python to C++ translation of Panda3d 1.7 samples/tutorials:
+ * This is a python to C++ translation of Panda3d 1.7 samples/tutorial:
  * Tut-Motion-Trails.py
  *
  * Original tutorial header:
