@@ -29,7 +29,7 @@ const char* CCommonFilters::CARTOON_BODY = "\n"
 // Class CommonFilters implements certain common image postprocessing
 // filters.  The constructor requires a filter builder as a parameter.
 CCommonFilters::CCommonFilters(GraphicsOutput* win, NodePath cam)
-   : m_manager(CFilterManager(win, cam)),
+   : m_manager(win, cam),
      m_configuration(),
      m_finalQuad(),
      m_bloom(4),
